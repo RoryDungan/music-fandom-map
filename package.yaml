@@ -26,15 +26,20 @@ library:
   source-dirs: src
 
 executables:
-  music-fandom-map-exe:
+  data-wrangler:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         data-wrangler
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - music-fandom-map
+    - wreq
+    - lens
+    - lens-aeson
+    - aeson
+    - bytestring
 
 tests:
   music-fandom-map-test:
