@@ -24,6 +24,9 @@ dependencies:
 
 library:
   source-dirs: src
+  dependencies:
+  - cassava
+  - bytestring
 
 executables:
   data-wrangler:

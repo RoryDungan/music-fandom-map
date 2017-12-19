@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Lib
     ( ArtistName
     , Streams
@@ -7,6 +9,8 @@ module Lib
     ) where
 
 import Data.List (sort, groupBy, foldl1')
+import Data.Csv
+import Control.Applicative
 
 type ArtistName = String
 type Streams = Int
@@ -14,6 +18,10 @@ type TrackName = String
 type CountryTitle = String
 
 data TrackEntry = Track TrackName ArtistName Streams deriving (Show)
+
+instance FromNamedRecord TrackEntry where
+    parseNamedRecord r =
+        Track <$> r .: "Track Name" <*> r .: "Artist" <*> r .: "Streams"
 
 data CountryEntry = Country CountryTitle ArtistName Streams deriving (Show)
 
