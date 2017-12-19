@@ -1,0 +1,6 @@
+requests csvs for specified country codes
+ignores responses with Content-Type other than text/csv
+creates entry in database for artist
+saves country popularity in artist document
+multiple csvs referencing the same artist create fields in the same document
+song plays for each artist are summed by country
