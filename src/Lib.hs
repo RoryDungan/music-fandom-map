@@ -6,11 +6,42 @@ module Lib
     , TrackName
     , TrackEntry
     , CountryEntry
+    , decodeItemsFromFile
+    , decodeItems
+    , processData
     ) where
 
-import Data.List (sort, groupBy, foldl1')
-import Data.Csv
+-- base
 import Control.Applicative
+import Control.Exception (IOException)
+import qualified Control.Exception as Exception
+import qualified Data.Foldable as Foldable
+
+-- bytestring
+import Data.ByteString.Lazy (ByteString)
+import qualified Data.ByteString.Lazy as ByteString
+
+-- list
+import Data.List (sort, sortBy, groupBy, foldl1')
+
+-- cassava
+import Data.Csv
+  ( DefaultOrdered(headerOrder)
+  , FromField(parseField)
+  , FromNamedRecord(parseNamedRecord)
+  , Header
+  , (.:)
+  , (.=)
+  )
+import qualified Data.Csv as Cassava
+
+-- text
+import Data.Text (Text)
+import qualified Data.Text.Encoding as Text
+
+-- vector
+import Data.Vector (Vector)
+import qualified Data.Vector as Vector
 
 type ArtistName = String
 type Streams = Int
@@ -21,7 +52,10 @@ data TrackEntry = Track TrackName ArtistName Streams deriving (Show)
 
 instance FromNamedRecord TrackEntry where
     parseNamedRecord r =
-        Track <$> r .: "Track Name" <*> r .: "Artist" <*> r .: "Streams"
+        Track
+            <$> r .: "Track Name"
+            <*> r .: "Artist"
+            <*> r .: "Streams"
 
 data CountryEntry = Country CountryTitle ArtistName Streams deriving (Show)
 
@@ -39,7 +73,25 @@ instance Ord CountryEntry where
 
 processData :: [(TrackEntry,CountryTitle)] -> [CountryEntry]
 processData =
-    map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
+    sortBy (\(Country _ _ s1) (Country _ _ s2) -> s2 `compare` s1)
+    . map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
     . groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
     . sort
     . map (\(Track title artist streams,c) -> Country c artist streams)
+
+decodeItems :: ByteString -> Either String (Vector TrackEntry)
+decodeItems = fmap snd . Cassava.decodeByName
+
+-- testing
+catchShowIO :: IO a -> IO (Either String a)
+catchShowIO action =
+    fmap Right action `Exception.catch` handleIOException
+    where
+        handleIOException :: IOException -> IO (Either String a)
+        handleIOException =
+            return . Left . show
+
+decodeItemsFromFile :: FilePath -> IO (Either String (Vector TrackEntry))
+decodeItemsFromFile filePath =
+    either Left decodeItems <$>
+        catchShowIO (ByteString.readFile filePath)

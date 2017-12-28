@@ -27,6 +27,8 @@ library:
   dependencies:
   - cassava
   - bytestring
+  - text
+  - vector
 
 executables:
   data-wrangler:

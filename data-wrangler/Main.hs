@@ -26,3 +26,11 @@ main = do
     let urls = map (\c -> url ++ c ++ suffix) countries
     reqs <- mapM get urls
     mapM_ (\r -> C.putStrLn (r ^. responseHeader "Content-Type")) reqs
+
+    let csvs =
+            map (^. responseBody)
+            . filter (\r ->
+                C.isInfixOf "data/csv" (r ^. responseHeader "Content-Type")
+            ) $ reqs
+
+    return ()
