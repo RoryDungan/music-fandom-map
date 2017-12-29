@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ExtendedDefaultRules #-}
 
 module Main where
 
@@ -7,7 +6,6 @@ import Lib
 
 -- base
 import Data.Either
-import Control.Monad.Trans (liftIO)
 import qualified Data.Vector as V
 
 -- bytestring
@@ -21,9 +19,8 @@ import Network.Wreq
 import Control.Lens
 
 -- MongoDB
-import Database.MongoDB     (Action, Document, Value, access, close, connect, 
-                             delete, exclude, find, host, insertMany, master,
-                             project, rest, select, sort, (=:))
+import Database.MongoDB     (Action, Value, access, close, connect, 
+                             host, insertMany, master, (=:))
 
 countries :: [String]
 countries = ["au.csv", "ad.html"]

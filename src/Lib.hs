@@ -15,36 +15,25 @@ module Lib
     ) where
 
 -- base
-import Control.Applicative
 import Control.Exception (IOException)
 import qualified Control.Exception as Exception
-import qualified Data.Foldable as Foldable
 
 -- bytestring
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as ByteString
 
 -- list
-import Data.List (sort, sortBy, groupBy, foldl1')
+import Data.List (sort, groupBy, foldl1')
 
 -- cassava
 import Data.Csv
-  ( DefaultOrdered(headerOrder)
-  , FromField(parseField)
-  , FromNamedRecord(parseNamedRecord)
-  , Header
+  ( FromNamedRecord(parseNamedRecord)
   , (.:)
-  , (.=)
   )
 import qualified Data.Csv as Cassava
 
--- text
-import Data.Text (Text)
-import qualified Data.Text.Encoding as Text
-
 -- vector
 import Data.Vector (Vector)
-import qualified Data.Vector as Vector
 
 type ArtistName = String
 type Streams = Int
@@ -85,7 +74,7 @@ processData c =
     map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
     . groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
     . sort
-    . map (\(Track _ artist streams) -> Country c artist streams)
+    . map (\(Track _ a s) -> Country c a s)
 
 decodeItems :: ByteString -> Either String (Vector Track)
 decodeItems = fmap snd . Cassava.decodeByName
