@@ -71,13 +71,12 @@ instance Ord CountryEntry where
         in  if nComp /= EQ then nComp else
             if aComp /= EQ then aComp else sComp
 
-processData :: [(TrackEntry,CountryTitle)] -> [CountryEntry]
-processData =
-    sortBy (\(Country _ _ s1) (Country _ _ s2) -> s2 `compare` s1)
-    . map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
+processData :: CountryTitle -> [TrackEntry] -> [CountryEntry]
+processData c =
+    map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
     . groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
     . sort
-    . map (\(Track title artist streams,c) -> Country c artist streams)
+    . map (\(Track _ artist streams) -> Country c artist streams)
 
 decodeItems :: ByteString -> Either String (Vector TrackEntry)
 decodeItems = fmap snd . Cassava.decodeByName
@@ -95,3 +94,8 @@ decodeItemsFromFile :: FilePath -> IO (Either String (Vector TrackEntry))
 decodeItemsFromFile filePath =
     either Left decodeItems <$>
         catchShowIO (ByteString.readFile filePath)
+
+-- To test:
+-- *Main Lib> import qualified Data.Vector as V
+-- *Main Lib V> items <- decodeItemsFromFile "au.csv"
+-- *Main Lib V> fmap ((processData "AU") . V.toList) items
