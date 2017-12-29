@@ -51,6 +51,8 @@ executable data-wrangler
     , aeson
     , bytestring
     , mtl
+    , mongoDB
+    , vector
   default-language: Haskell2010
 
 test-suite music-fandom-map-test

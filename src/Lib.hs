@@ -4,7 +4,10 @@ module Lib
     ( ArtistName
     , Streams
     , TrackName
-    , TrackEntry
+    , Track
+    , countryTitle
+    , artistName
+    , streams
     , CountryEntry
     , decodeItemsFromFile
     , decodeItems
@@ -48,16 +51,22 @@ type Streams = Int
 type TrackName = String
 type CountryTitle = String
 
-data TrackEntry = Track TrackName ArtistName Streams deriving (Show)
+data Track = Track { trackName :: TrackName
+                   , trackArtistName :: ArtistName
+                   , trackStreams :: Streams
+                   } deriving (Show)
 
-instance FromNamedRecord TrackEntry where
+instance FromNamedRecord Track where
     parseNamedRecord r =
         Track
             <$> r .: "Track Name"
             <*> r .: "Artist"
             <*> r .: "Streams"
 
-data CountryEntry = Country CountryTitle ArtistName Streams deriving (Show)
+data CountryEntry = Country { countryTitle :: CountryTitle
+                            , artistName :: ArtistName
+                            , streams :: Streams
+                            } deriving (Show)
 
 instance Eq CountryEntry where
     (Country n1 a1 s1) == (Country n2 a2 s2) =
@@ -71,14 +80,14 @@ instance Ord CountryEntry where
         in  if nComp /= EQ then nComp else
             if aComp /= EQ then aComp else sComp
 
-processData :: CountryTitle -> [TrackEntry] -> [CountryEntry]
+processData :: CountryTitle -> [Track] -> [CountryEntry]
 processData c =
     map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
     . groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
     . sort
     . map (\(Track _ artist streams) -> Country c artist streams)
 
-decodeItems :: ByteString -> Either String (Vector TrackEntry)
+decodeItems :: ByteString -> Either String (Vector Track)
 decodeItems = fmap snd . Cassava.decodeByName
 
 -- testing
@@ -90,7 +99,7 @@ catchShowIO action =
         handleIOException =
             return . Left . show
 
-decodeItemsFromFile :: FilePath -> IO (Either String (Vector TrackEntry))
+decodeItemsFromFile :: FilePath -> IO (Either String (Vector Track))
 decodeItemsFromFile filePath =
     either Left decodeItems <$>
         catchShowIO (ByteString.readFile filePath)

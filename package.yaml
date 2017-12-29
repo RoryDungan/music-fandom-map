@@ -46,6 +46,8 @@ executables:
     - aeson
     - bytestring
     - mtl
+    - mongoDB
+    - vector
 
 tests:
   music-fandom-map-test:
