@@ -67,15 +67,11 @@ insertEntries countryEntries = insertMany "stats" bsonData
 main :: IO ()
 main = do
     -- Request the CSVs for all countries
+    putStrLn "Requesting data for specified countries"
     reqs <- mapM getForCountry countries
-    putStrLn "Got URLs:"
-    mapM_ (\r -> C.putStrLn (r ^. responseHeader "Content-Type")) (map snd reqs) 
-    putStrLn ""
+    putStrLn "Finished downloading data"
 
     let csvs = filterCSVs reqs
-
-    putStrLn "Filtered:"
-    mapM_ putStrLn (map fst csvs)
 
     --liftEither :: (a, Either b c) -> Either b (a, c)
     let liftEither (c,e) = case e of 
@@ -89,16 +85,11 @@ main = do
             (fmap (\(c,v) -> ((processData c) . V.toList) v) trackEntries) 
             >>= id
 
-    putStrLn "entries: "
-    mapM_ (putStrLn . show) countryEntries
+    putStrLn "Adding data to database"
 
-    -- pipe <- connect (host "127.0.0.1")
-    -- e <- access pipe master "music-map" (run countryEntries)
-    -- close pipe
+    pipe <- connect (host "localhost") -- TODO: move this to config
+    e <- access pipe master "music-map" $ do 
+        insertEntries countryEntries
+    close pipe
 
-    -- print e
-
-
-run :: [CountryEntry] -> Action IO ()
-run tracks = do
-    return ()
+    putStrLn "Finished inserting data"
