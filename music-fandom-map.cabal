@@ -50,6 +50,7 @@ executable data-wrangler
     , lens-aeson
     , aeson
     , bytestring
+    , mtl
   default-language: Haskell2010
 
 test-suite music-fandom-map-test

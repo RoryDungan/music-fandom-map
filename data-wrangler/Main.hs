@@ -3,10 +3,20 @@
 module Main where
 
 import Lib
-import Network.Wreq
-import Control.Lens
+
+-- base
+import Data.Either
+import Control.Monad.Trans (liftIO)
+
+-- bytestring
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy.Char8 as CL
+
+-- wreq
+import Network.Wreq
+
+--lens
+import Control.Lens
 
 countries :: [String]
 countries = ["au.csv", "ad.html"]
@@ -17,28 +27,39 @@ countries = ["au.csv", "ad.html"]
 --              "no", "nz", "pa", "pe", "ph", "pl", "pt", "py", "se", "sg", "sk",
 --              "sv", "th", "tr", "tw", "uy"]
 
+-- Only keep responses that were actually CSVs
+filterCSVs :: [(t, Response body)] -> [(t, Response body)]
+filterCSVs responses = 
+    filter (\(_,r) -> "data/csv" `C.isInfixOf` (contentTypeHeader r)) responses
+        where contentTypeHeader r = r ^. responseHeader "Content-Type"
 
-main :: IO ()
-main = do
+-- Takes a country code and retuns a tuple with the same 
+-- country name and the result of the request.
+getForCountry :: String -> IO (String, Response CL.ByteString)
+getForCountry c = do 
     -- let url = "https://spotifycharts.com/regional/"
     --     suffix = "/daily/latest/download"
     let url = "http://localhost:3001/"
         suffix = ""
 
-    -- Tuples of country code + URL
-    let urls = map (\c -> (c,url ++ c ++ suffix)) countries :: [(String,String)]
+    res <- get (url ++ c ++ suffix)
+    return (c,res)
 
-    let getForCountry (c,u) = do 
-        res <- get u
-        return (c,res)
-        
-    reqs <- mapM getForCountry urls
-    mapM_ (\r -> C.putStrLn (r ^. responseHeader "Content-Type")) (map snd reqs)
+main :: IO ()
+main = do
 
-    let csvs =
-            map (^. responseBody)
-            . filter (\r ->
-                C.isInfixOf "data/csv" (r ^. responseHeader "Content-Type")
-            ) $ (map snd reqs)
+    reqs <- mapM getForCountry countries
+    let csvs = filterCSVs reqs
 
+    --liftEither :: (a, Either b c) -> Either b (a, c)
+    let liftEither (c,e) = case e of 
+            Left msg  -> Left msg
+            Right res -> Right (c,res)
+
+    let tracks = map liftEither $ 
+            map (\(c,r) -> (c, decodeItems (r ^. responseBody))) csvs
+
+    let track1 = head $ rights tracks
+
+    
     return ()

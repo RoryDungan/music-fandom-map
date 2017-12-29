@@ -45,6 +45,7 @@ executables:
     - lens-aeson
     - aeson
     - bytestring
+    - mtl
 
 tests:
   music-fandom-map-test:
