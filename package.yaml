@@ -57,6 +57,7 @@ executables:
     - music-fandom-map
     - scotty
     - wai-middleware-static
+    - http-types
     - mongoDB
     - bson
     - aeson

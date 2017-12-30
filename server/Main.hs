@@ -4,13 +4,22 @@
 
 module Main where
 
+-- Scotty
 import Web.Scotty
 import Network.Wai.Middleware.Static
+import Network.HTTP.Types (status500)
+
 --import Data.Aeson (FromJSON, ToJSON)
-import Data.Bson (ObjectId())
+
+-- BSON
+import Data.Bson (ObjectId(), look, cast')
+
+-- MongoDB
 import Database.MongoDB (Action, Document, Pipe, Query, master, connect, host, 
                          access, close, find, select, project, rest, (=:))
 import Database.MongoDB.Query (Collection)
+
+-- text
 import qualified Data.Text.Lazy as T
 
 statsCollection :: Collection
