@@ -33,6 +33,7 @@ library
     , bytestring
     , text
     , vector
+    , containers
   exposed-modules:
       Lib
   default-language: Haskell2010

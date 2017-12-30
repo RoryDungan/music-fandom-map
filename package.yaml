@@ -29,6 +29,7 @@ library:
   - bytestring
   - text
   - vector
+  - containers
 
 executables:
   data-wrangler:

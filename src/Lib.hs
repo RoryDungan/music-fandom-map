@@ -7,7 +7,7 @@ module Lib
     , Track
     , countryTitle
     , artistName
-    , streams
+    , streamsPct
     , CountryEntry
     , decodeItemsFromFile
     , decodeItems
@@ -17,13 +17,17 @@ module Lib
 -- base
 import Control.Exception (IOException)
 import qualified Control.Exception as Exception
+import Data.Function
+
+-- containers
+import qualified Data.Map as Map
 
 -- bytestring
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as ByteString
 
 -- list
-import Data.List (sort, groupBy, foldl1')
+import Data.List (sort, groupBy, foldl', foldl1')
 
 -- cassava
 import Data.Csv
@@ -54,7 +58,7 @@ instance FromNamedRecord Track where
 
 data CountryEntry = Country { countryTitle :: CountryTitle
                             , artistName :: ArtistName
-                            , streams :: Streams
+                            , streamsPct :: Float
                             } deriving (Show)
 
 instance Eq CountryEntry where
@@ -70,11 +74,14 @@ instance Ord CountryEntry where
             if aComp /= EQ then aComp else sComp
 
 processData :: CountryTitle -> [Track] -> [CountryEntry]
-processData c =
-    map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
-    . groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
-    . sort
-    . map (\(Track _ a s) -> Country c a s)
+processData c xs =
+    let countryTotal = fromIntegral $
+            foldl' (\acc t -> acc + trackStreams t) 0 xs
+
+    in  map (\(Track _ a s) -> Country c a ((fromIntegral s) / countryTotal)) xs
+    & sort
+    & groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
+    & map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
 
 decodeItems :: ByteString -> Either String (Vector Track)
 decodeItems = fmap snd . Cassava.decodeByName

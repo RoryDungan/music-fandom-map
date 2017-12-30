@@ -55,7 +55,7 @@ insertEntries countryEntries = insertMany "stats" bsonData
             [
                 "name" =: countryTitle c, 
                 "artistName" =: artistName c, 
-                "streams" =: streams c
+                "streamsPct" =: streamsPct c
             ])
             countryEntries
 
