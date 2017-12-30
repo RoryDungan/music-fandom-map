@@ -16,6 +16,8 @@ import qualified Data.Text.Lazy as T
 statsCollection :: Collection
 statsCollection = "stats"
 
+data ArtistInfo = ArtistInfo ObjectId String deriving (Show) 
+
 main :: IO ()
 main = do 
     pipe <- connect (host "localhost")
@@ -23,8 +25,10 @@ main = do
     scotty 3000 $ do
 
         get "/artists" $ do
-            res <- allArtists pipe
-            text $ T.pack $ show res
+            resBson <- allArtists pipe
+            case sequence (map artistInfoFromBson resBson) of
+                Just res -> text $ T.pack $ show res
+                Nothing  -> text "Error reading from database"
 
         middleware $ staticPolicy (noDots >-> addBase "frontend")
 
@@ -40,3 +44,10 @@ allArtists pipe =
 artistStats :: Pipe -> ObjectId -> ActionM [Document]
 artistStats pipe oid = 
     runQuery pipe (select ["_id" =: oid] statsCollection)
+
+artistInfoFromBson :: Document -> Maybe ArtistInfo
+artistInfoFromBson document = do 
+    oid <- look "_id" document >>= cast'
+    name <- look "artistName" document >>= cast'
+    return (ArtistInfo oid name)
+    Nothing
