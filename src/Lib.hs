@@ -16,13 +16,12 @@ module Lib
 import Control.Exception (IOException)
 import qualified Control.Exception as Exception
 import Data.Function
+import Data.List (sort, sortBy, groupBy, foldl', foldl1')
+
 
 -- bytestring
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as ByteString
-
--- list
-import Data.List (sort, sortBy, groupBy, foldl', foldl1')
 
 -- cassava
 import Data.Csv

@@ -93,7 +93,7 @@ main = do
     putStrLn "Adding data to database"
 
     pipe <- connect (host "localhost") -- TODO: move this to config
-    e <- access pipe master "music-map" $ do 
+    access pipe master "music-map" $ do 
         clearStats
         insertEntries artistEntries
     close pipe

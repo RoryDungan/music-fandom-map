@@ -47,8 +47,6 @@ executable data-wrangler
     , music-fandom-map
     , wreq
     , lens
-    , lens-aeson
-    , aeson
     , bytestring
     , mongoDB
     , vector
