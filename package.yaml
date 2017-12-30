@@ -59,7 +59,10 @@ executables:
     - music-fandom-map
     - scotty
     - wai-middleware-static
+    - mongoDB
+    - bson
     - aeson
+    - text
 
 tests:
   music-fandom-map-test:

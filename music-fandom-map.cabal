@@ -65,7 +65,10 @@ executable server
     , music-fandom-map
     , scotty
     , wai-middleware-static
+    , mongoDB
+    , bson
     , aeson
+    , text
   default-language: Haskell2010
 
 test-suite music-fandom-map-test
