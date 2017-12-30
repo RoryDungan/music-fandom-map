@@ -48,6 +48,7 @@ executables:
     - bytestring
     - mongoDB
     - vector
+    - text
   server:
     main:               Main.hs
     source-dirs:        server

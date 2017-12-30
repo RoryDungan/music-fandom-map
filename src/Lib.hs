@@ -1,17 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Lib
-    ( ArtistName
-    , Streams
-    , TrackName
-    , Track
-    , countryTitle
+    ( ArtistEntry
     , artistName
-    , streamsPct
-    , CountryEntry
-    , decodeItemsFromFile
+    , countryValues
+    , ArtistName
+    , CountryTitle
+    , StreamsPct
     , decodeItems
     , processData
+    , artistSummaries
     ) where
 
 -- base
@@ -20,6 +18,7 @@ import qualified Control.Exception as Exception
 import Data.Function
 
 -- containers
+import Data.Map (Map)
 import qualified Data.Map as Map
 
 -- bytestring
@@ -27,7 +26,7 @@ import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as ByteString
 
 -- list
-import Data.List (sort, groupBy, foldl', foldl1')
+import Data.List (sort, sortBy, groupBy, foldl', foldl1')
 
 -- cassava
 import Data.Csv
@@ -41,6 +40,7 @@ import Data.Vector (Vector)
 
 type ArtistName = String
 type Streams = Int
+type StreamsPct = Float
 type TrackName = String
 type CountryTitle = String
 
@@ -57,9 +57,13 @@ instance FromNamedRecord Track where
             <*> r .: "Streams"
 
 data CountryEntry = Country { countryTitle :: CountryTitle
-                            , artistName :: ArtistName
-                            , streamsPct :: Float
+                            , countryArtistName :: ArtistName
+                            , streamsPct :: StreamsPct
                             } deriving (Show)
+
+data ArtistEntry = ArtistEntry { artistName :: ArtistName
+                               , countryValues :: [(CountryTitle, StreamsPct)]
+                               }
 
 instance Eq CountryEntry where
     (Country n1 a1 s1) == (Country n2 a2 s2) =
@@ -82,6 +86,19 @@ processData c xs =
     & sort
     & groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
     & map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
+
+artistSummaries :: [CountryEntry] -> [ArtistEntry]
+artistSummaries xs =
+    sortBy (\(Country _ a1 _) (Country _ a2 _) -> a1 `compare` a2) xs
+    & groupBy (\(Country _ a1 _) (Country _ a2 _) -> a1 == a2)
+    & map (\xs' -> 
+        let name = 
+                countryArtistName (head xs')
+            streamsPerCountry = 
+                map (\(Country t _ s) -> (t,s)) xs'
+
+        in  ArtistEntry name streamsPerCountry
+    )
 
 decodeItems :: ByteString -> Either String (Vector Track)
 decodeItems = fmap snd . Cassava.decodeByName

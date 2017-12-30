@@ -6,7 +6,12 @@ import Lib
 
 -- base
 import Data.Either
+
+-- vector
 import qualified Data.Vector as V
+
+-- text
+import Data.Text (pack)
 
 -- bytestring
 import qualified Data.ByteString.Char8 as C
@@ -49,15 +54,18 @@ getForCountry c = do
     return (c,res)
 
 -- Insert the specified list of tracks into the database
-insertEntries :: [CountryEntry] -> Action IO [Value]
-insertEntries countryEntries = insertMany "stats" bsonData
-    where bsonData = map (\c -> 
+insertEntries :: [ArtistEntry] -> Action IO [Value]
+insertEntries artistEntries = insertMany "stats" bsonData
+    where bsonData = map (\a -> 
             [
-                "name" =: countryTitle c, 
-                "artistName" =: artistName c, 
-                "streamsPct" =: streamsPct c
+                "artistName" =: artistName a, 
+                "streams" =: map (\(c,s) -> 
+                    [ 
+                        (pack c) =: s 
+                    ]
+                    ) (countryValues a)
             ])
-            countryEntries
+            artistEntries
 
 clearStats :: Action IO ()
 clearStats = delete (select [] "stats")
@@ -79,16 +87,15 @@ main = do
     let trackEntries = rights $ map liftEither $ 
             map (\(c,r) -> (c, decodeItems (r ^. responseBody))) csvs
 
-    let countryEntries = 
-            (fmap (\(c,v) -> ((processData c) . V.toList) v) trackEntries) 
-            >>= id
+    let artistEntries = artistSummaries $
+            (fmap (\(c,v) -> ((processData c) . V.toList) v) trackEntries) >>= id
 
     putStrLn "Adding data to database"
 
     pipe <- connect (host "localhost") -- TODO: move this to config
     e <- access pipe master "music-map" $ do 
         clearStats
-        insertEntries countryEntries
+        insertEntries artistEntries
     close pipe
 
     putStrLn "Finished inserting data"
