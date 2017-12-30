@@ -68,6 +68,7 @@ executable server
     , bson
     , aeson
     , text
+    , containers
   default-language: Haskell2010
 
 test-suite music-fandom-map-test

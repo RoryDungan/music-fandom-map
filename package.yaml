@@ -62,6 +62,7 @@ executables:
     - bson
     - aeson
     - text
+    - containers
 
 tests:
   music-fandom-map-test:
