@@ -13,14 +13,14 @@ import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy.Char8 as CL
 
 -- wreq
-import Network.Wreq
+import Network.Wreq (Response, responseHeader, responseBody, get)
 
 --lens
 import Control.Lens
 
 -- MongoDB
-import Database.MongoDB     (Action, Value, access, close, connect, 
-                             host, insertMany, master, (=:))
+import Database.MongoDB     (Action, Value, access, close, connect, select, 
+                             delete, host, insertMany, master, (=:))
 
 countries :: [String]
 -- countries = ["au.csv", "ad.html"]
@@ -59,6 +59,9 @@ insertEntries countryEntries = insertMany "stats" bsonData
             ])
             countryEntries
 
+clearStats :: Action IO ()
+clearStats = delete (select [] "stats")
+
 main :: IO ()
 main = do
     -- Request the CSVs for all countries
@@ -84,6 +87,7 @@ main = do
 
     pipe <- connect (host "localhost") -- TODO: move this to config
     e <- access pipe master "music-map" $ do 
+        clearStats
         insertEntries countryEntries
     close pipe
 
