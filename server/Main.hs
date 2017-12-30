@@ -36,8 +36,13 @@ main = do
         get "/artists" $ do
             resBson <- allArtists pipe
             case sequence (map artistInfoFromBson resBson) of
-                Just res -> text $ T.pack $ show res
-                Nothing  -> text "Error reading from database"
+                Just res -> 
+                    text $ T.pack $ show res
+                Nothing  -> do
+                    -- TODO: error logging
+                    status status500
+                    text "Internal server error"
+
 
         middleware $ staticPolicy (noDots >-> addBase "frontend")
 
@@ -59,4 +64,3 @@ artistInfoFromBson document = do
     oid <- look "_id" document >>= cast'
     name <- look "artistName" document >>= cast'
     return (ArtistInfo oid name)
-    Nothing
