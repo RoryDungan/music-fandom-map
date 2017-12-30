@@ -45,7 +45,6 @@ executables:
     - lens-aeson
     - aeson
     - bytestring
-    - mtl
     - mongoDB
     - vector
   server:

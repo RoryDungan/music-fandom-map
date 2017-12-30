@@ -50,7 +50,6 @@ executable data-wrangler
     , lens-aeson
     , aeson
     , bytestring
-    , mtl
     , mongoDB
     , vector
   default-language: Haskell2010
