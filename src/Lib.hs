@@ -17,10 +17,6 @@ import Control.Exception (IOException)
 import qualified Control.Exception as Exception
 import Data.Function
 
--- containers
-import Data.Map (Map)
-import qualified Data.Map as Map
-
 -- bytestring
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as ByteString
