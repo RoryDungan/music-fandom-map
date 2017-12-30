@@ -33,7 +33,7 @@ main = do
 
     scotty 3000 $ do
 
-        get "/artists" $ do
+        get "/api/v1/artists" $ do
             resBson <- allArtists pipe
             case sequence (map artistInfoFromBson resBson) of
                 Just res -> 
