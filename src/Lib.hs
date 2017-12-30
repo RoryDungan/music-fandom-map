@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Lib
-    ( ArtistEntry
+    ( ArtistEntry (Artist)
     , artistName
     , countryValues
     , ArtistName
@@ -55,9 +55,9 @@ data CountryEntry = Country { countryTitle :: CountryTitle
                             , streamsPct :: StreamsPct
                             } deriving (Show)
 
-data ArtistEntry = ArtistEntry { artistName :: ArtistName
+data ArtistEntry = Artist { artistName :: ArtistName
                                , countryValues :: [(CountryTitle, StreamsPct)]
-                               }
+                               } deriving (Show)
 
 instance Eq CountryEntry where
     (Country n1 a1 s1) == (Country n2 a2 s2) =
@@ -91,7 +91,7 @@ artistSummaries xs =
             streamsPerCountry = 
                 map (\(Country t _ s) -> (t,s)) xs'
 
-        in  ArtistEntry name streamsPerCountry
+        in  Artist name streamsPerCountry
     )
 
 decodeItems :: ByteString -> Either String (Vector Track)
