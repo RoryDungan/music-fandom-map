@@ -4,12 +4,17 @@
 
 module Main where
 
+-- base
+import Data.Map (Map)
+import qualified Data.Map as Map
+
 -- Scotty
 import Web.Scotty
 import Network.Wai.Middleware.Static
 import Network.HTTP.Types (status500)
 
---import Data.Aeson (FromJSON, ToJSON)
+-- Aeson
+import Data.Aeson (ToJSON, toJSON, object, (.=))
 
 -- BSON
 import Data.Bson (ObjectId(), look, cast')
@@ -20,11 +25,14 @@ import Database.MongoDB (Action, Document, Pipe, Query, master, connect, host,
 import Database.MongoDB.Query (Collection)
 
 -- text
-import qualified Data.Text.Lazy as T
+import qualified Data.Text as T
 
+-- DB collection with the data processed by the data wrangler in it.
 statsCollection :: Collection
 statsCollection = "stats"
 
+-- Information associating artist names and their Object IDs. Used when the 
+-- /artsts route is requested.
 data ArtistInfo = ArtistInfo ObjectId String deriving (Show) 
 
 main :: IO ()
@@ -36,8 +44,12 @@ main = do
         get "/api/v1/artists" $ do
             resBson <- allArtists pipe
             case sequence (map artistInfoFromBson resBson) of
-                Just res -> 
-                    text $ T.pack $ show res
+                -- Convert our [ArtistInfo] to a `Map String String` for easy 
+                -- JSON serialisation.
+                Just res -> json 
+                    . toJSON 
+                    . Map.fromList 
+                    . map (\(ArtistInfo o n) -> (T.pack (show o), n)) $ res
                 Nothing  -> do
                     -- TODO: error logging
                     status status500
