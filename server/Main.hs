@@ -4,11 +4,12 @@ module Main where
 
 import Lib
 import Web.Scotty
+import Network.Wai.Middleware.Static
 import Data.Aeson (FromJSON, ToJSON)
-import GHC.Generics
-import Data.Monoid
 
 main :: IO ()
 main = scotty 3000 $ do
-    get "/" $
+    get "/test" $
         text "Hello world"
+
+    middleware $ staticPolicy (noDots >-> addBase "frontend")

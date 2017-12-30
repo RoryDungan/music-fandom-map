@@ -57,6 +57,7 @@ executables:
     dependencies:
     - music-fandom-map
     - scotty
+    - wai-middleware-static
     - aeson
 
 tests:

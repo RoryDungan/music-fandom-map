@@ -63,6 +63,7 @@ executable server
       base >= 4.7 && < 5
     , music-fandom-map
     , scotty
+    , wai-middleware-static
     , aeson
   default-language: Haskell2010
 
