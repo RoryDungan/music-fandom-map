@@ -4,14 +4,15 @@
 
 module Main where
 
+import Lib
+
 -- base
-import Data.Map (Map)
 import qualified Data.Map as Map
 
 -- Scotty
 import Web.Scotty
 import Network.Wai.Middleware.Static
-import Network.HTTP.Types (status500)
+import Network.HTTP.Types (status400, status404, status500)
 
 -- Aeson
 import Data.Aeson (ToJSON, toJSON, object, (.=))
@@ -20,7 +21,7 @@ import Data.Aeson (ToJSON, toJSON, object, (.=))
 import Data.Bson (ObjectId(), look, cast')
 
 -- MongoDB
-import Database.MongoDB (Action, Document, Pipe, Query, master, connect, host, 
+import Database.MongoDB (Document, Pipe, Query, master, connect, host, 
                          access, close, find, select, project, rest, (=:))
 import Database.MongoDB.Query (Collection)
 
@@ -34,6 +35,13 @@ statsCollection = "stats"
 -- Information associating artist names and their Object IDs. Used when the 
 -- /artsts route is requested.
 data ArtistInfo = ArtistInfo ObjectId String deriving (Show) 
+
+instance ToJSON ArtistEntry where
+    toJSON (Artist name streams) = object 
+        [
+            "name" .= name, 
+            "streams" .= Map.fromList streams
+        ]
 
 main :: IO ()
 main = do 
@@ -54,6 +62,26 @@ main = do
                     -- TODO: error logging
                     status status500
                     text "Internal server error"
+
+        get "/api/v1/artist/:id" $ do
+            paramId <- param "id"
+            case (readEither paramId) of
+                Left msg -> do
+                    status status400
+                    text msg
+
+                Right artistId -> do
+                    resBson <- artistStats pipe artistId
+                    if length resBson <= 0 then do
+                        status status404
+                        text "Could not find the specified artist ID"
+                    else 
+                        case artistStatsFromBson (head resBson) of
+                            Just res -> json $ toJSON res
+                            Nothing -> do
+                                -- TODO: error logging
+                                status status500
+                                text "Internal server error"
 
 
         middleware $ staticPolicy (noDots >-> addBase "frontend")
@@ -76,3 +104,9 @@ artistInfoFromBson document = do
     oid <- look "_id" document >>= cast'
     name <- look "artistName" document >>= cast'
     return (ArtistInfo oid name)
+
+artistStatsFromBson :: Document -> Maybe ArtistEntry
+artistStatsFromBson document = do
+    name <- look "artistName" document >>= cast'
+    --streams <- look "streams" document >>= cast'
+    return (Artist name [])
