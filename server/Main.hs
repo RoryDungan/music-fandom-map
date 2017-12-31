@@ -18,7 +18,8 @@ import Network.HTTP.Types (status400, status404, status500)
 import Data.Aeson (ToJSON, toJSON, object, (.=))
 
 -- BSON
-import Data.Bson (ObjectId(), look, cast')
+import Data.Bson (ObjectId(), look, cast, cast')
+import Data.Bson.Mapping
 
 -- MongoDB
 import Database.MongoDB (Document, Pipe, Query, master, connect, host, 
@@ -34,7 +35,18 @@ statsCollection = "stats"
 
 -- Information associating artist names and their Object IDs. Used when the 
 -- /artsts route is requested.
-data ArtistInfo = ArtistInfo ObjectId String deriving (Show) 
+data ArtistInfo = ArtistInfo ObjectId String deriving (Show, Eq) 
+
+instance Bson ArtistInfo where
+    fromBson document = do 
+        oid <- look "_id" document >>= cast
+        name <- look "artistName" document >>= cast
+        return (ArtistInfo oid name)
+
+    toBson (ArtistInfo oid name) = [
+            "_id" =: oid,
+            "artistName" =: name
+        ]
 
 instance ToJSON ArtistEntry where
     toJSON (Artist name streams) = object 
@@ -51,7 +63,7 @@ main = do
 
         get "/api/v1/artists" $ do
             resBson <- allArtists pipe
-            case sequence (map artistInfoFromBson resBson) of
+            case sequence (map fromBson resBson) of
                 -- Convert our [ArtistInfo] to a `Map String String` for easy 
                 -- JSON serialisation.
                 Just res -> json 
@@ -100,12 +112,6 @@ allArtists pipe =
 artistStats :: Pipe -> ObjectId -> ActionM [Document]
 artistStats pipe oid = 
     runQuery pipe (select ["_id" =: oid] statsCollection)
-
-artistInfoFromBson :: Document -> Maybe ArtistInfo
-artistInfoFromBson document = do 
-    oid <- look "_id" document >>= cast'
-    name <- look "artistName" document >>= cast'
-    return (ArtistInfo oid name)
 
 artistStatsFromBson :: Document -> Maybe ArtistEntry
 artistStatsFromBson document = do

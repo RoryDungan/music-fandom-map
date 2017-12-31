@@ -86,6 +86,7 @@ instance Bson ArtistEntry where
             ]
             ) (countryValues a)
         ]
+    -- TODO: fromBson
 
 processData :: CountryTitle -> [Track] -> [CountryEntry]
 processData c xs =
