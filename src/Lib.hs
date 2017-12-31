@@ -18,13 +18,17 @@ import qualified Control.Exception as Exception
 import Data.Function
 import Data.List (sort, sortBy, groupBy, foldl', foldl1')
 
+-- text
 import Data.Text (pack, unpack)
 
+-- bson & bson-mapping
 import Data.Bson
 import Data.Bson.Mapping
 
+-- containers
 import qualified Data.Map as Map
 
+-- aeson
 import Data.Aeson (ToJSON, toJSON, object, (.=))
 
 -- bytestring

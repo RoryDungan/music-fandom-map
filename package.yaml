@@ -25,14 +25,14 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-  - cassava
-  - bytestring
   - text
-  - vector
   - bson
   - bson-mapping
-  - aeson
   - containers
+  - aeson
+  - bytestring
+  - cassava
+  - vector
 
 executables:
   data-wrangler:
@@ -60,15 +60,15 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - music-fandom-map
+    - containers
     - scotty
     - wai-middleware-static
     - http-types
-    - mongoDB
-    - bson
     - aeson
-    - text
-    - containers
+    - bson
     - bson-mapping
+    - mongoDB
+    - text
 
 tests:
   music-fandom-map-test:

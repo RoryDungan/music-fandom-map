@@ -6,7 +6,7 @@ module Main where
 
 import Lib
 
--- base
+-- containers
 import qualified Data.Map as Map
 
 -- Scotty
@@ -17,7 +17,7 @@ import Network.HTTP.Types (status400, status404, status500)
 -- Aeson
 import Data.Aeson (toJSON)
 
--- BSON
+-- BSON & bson-mapping
 import Data.Bson (ObjectId(), look, cast)
 import Data.Bson.Mapping
 
