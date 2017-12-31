@@ -35,6 +35,8 @@ library
     , vector
     , bson
     , bson-mapping
+    , aeson
+    , containers
   exposed-modules:
       Lib
   default-language: Haskell2010

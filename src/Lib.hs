@@ -23,6 +23,10 @@ import Data.Text (pack, unpack)
 import Data.Bson
 import Data.Bson.Mapping
 
+import qualified Data.Map as Map
+
+import Data.Aeson (ToJSON, toJSON, object, (.=))
+
 -- bytestring
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as ByteString
@@ -76,6 +80,13 @@ instance Ord CountryEntry where
 data ArtistEntry = Artist { artistName :: ArtistName
                           , countryValues :: [(CountryTitle, StreamsPct)]
                           } deriving (Show, Eq)
+                          
+instance ToJSON ArtistEntry where
+    toJSON (Artist name streams) = object 
+        [
+            "name" .= name, 
+            "streams" .= Map.fromList streams
+        ]
 
 instance Bson ArtistEntry where
     toBson a = [
@@ -84,13 +95,16 @@ instance Bson ArtistEntry where
                 (pack c) =: s 
             ) (countryValues a)
         ]
+
     fromBson document = do
         name <- look "artistName" document >>= cast
-        let maybeStreams = look "streams" document 
-                >>= cast'List >>= mapStreams
+    
         case maybeStreams of 
             Nothing -> fail "Could not read field"
             Just streams -> return (Artist name streams)
+        where maybeStreams = look "streams" document 
+                >>= cast'List >>= mapStreams
+
 
 mapStreams :: [Field] -> Maybe [(CountryTitle, StreamsPct)]
 mapStreams = sequence . (map (\f -> 

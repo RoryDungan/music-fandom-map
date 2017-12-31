@@ -31,6 +31,8 @@ library:
   - vector
   - bson
   - bson-mapping
+  - aeson
+  - containers
 
 executables:
   data-wrangler:

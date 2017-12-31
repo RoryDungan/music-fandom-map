@@ -15,10 +15,10 @@ import Network.Wai.Middleware.Static
 import Network.HTTP.Types (status400, status404, status500)
 
 -- Aeson
-import Data.Aeson (ToJSON, toJSON, object, (.=))
+import Data.Aeson (toJSON)
 
 -- BSON
-import Data.Bson (ObjectId(), look, cast, cast')
+import Data.Bson (ObjectId(), look, cast)
 import Data.Bson.Mapping
 
 -- MongoDB
@@ -46,13 +46,6 @@ instance Bson ArtistInfo where
     toBson (ArtistInfo oid name) = [
             "_id" =: oid,
             "artistName" =: name
-        ]
-
-instance ToJSON ArtistEntry where
-    toJSON (Artist name streams) = object 
-        [
-            "name" .= name, 
-            "streams" .= Map.fromList streams
         ]
 
 main :: IO ()
