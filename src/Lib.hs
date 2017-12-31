@@ -81,9 +81,7 @@ instance Bson ArtistEntry where
     toBson a = [
         "artistName" =: artistName a, 
         "streams" =: map (\(c,s) -> 
-            [ 
                 (pack c) =: s 
-            ]
             ) (countryValues a)
         ]
     -- TODO: fromBson
