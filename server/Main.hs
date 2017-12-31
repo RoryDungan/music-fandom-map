@@ -58,6 +58,7 @@ main = do
                     . toJSON 
                     . Map.fromList 
                     . map (\(ArtistInfo o n) -> (T.pack (show o), n)) $ res
+
                 Nothing  -> do
                     -- TODO: error logging
                     status status500
@@ -78,7 +79,8 @@ main = do
                     else 
                         case artistStatsFromBson (head resBson) of
                             Just res -> json $ toJSON res
-                            Nothing -> do
+
+                            Nothing  -> do
                                 -- TODO: error logging
                                 status status500
                                 text "Internal server error"

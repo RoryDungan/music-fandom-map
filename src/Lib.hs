@@ -18,6 +18,11 @@ import qualified Control.Exception as Exception
 import Data.Function
 import Data.List (sort, sortBy, groupBy, foldl', foldl1')
 
+import Data.Text (pack)
+
+import Data.Bson
+import Data.Bson.Mapping
+
 -- bytestring
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as ByteString
@@ -55,10 +60,6 @@ data CountryEntry = Country { countryTitle :: CountryTitle
                             , streamsPct :: StreamsPct
                             } deriving (Show)
 
-data ArtistEntry = Artist { artistName :: ArtistName
-                               , countryValues :: [(CountryTitle, StreamsPct)]
-                               } deriving (Show)
-
 instance Eq CountryEntry where
     (Country n1 a1 s1) == (Country n2 a2 s2) =
         n1 == n2 && a1 == a2 && s1 == s2
@@ -70,6 +71,21 @@ instance Ord CountryEntry where
             sComp = s1 `compare` s2
         in  if nComp /= EQ then nComp else
             if aComp /= EQ then aComp else sComp
+
+
+data ArtistEntry = Artist { artistName :: ArtistName
+                          , countryValues :: [(CountryTitle, StreamsPct)]
+                          } deriving (Show, Eq)
+
+instance Bson ArtistEntry where
+    toBson a = [
+        "artistName" =: artistName a, 
+        "streams" =: map (\(c,s) -> 
+            [ 
+                (pack c) =: s 
+            ]
+            ) (countryValues a)
+        ]
 
 processData :: CountryTitle -> [Track] -> [CountryEntry]
 processData c xs =

@@ -29,6 +29,8 @@ library:
   - bytestring
   - text
   - vector
+  - bson
+  - bson-mapping
 
 executables:
   data-wrangler:
@@ -46,6 +48,7 @@ executables:
     - mongoDB
     - vector
     - text
+    - bson-mapping
   server:
     main:               Main.hs
     source-dirs:        server
@@ -63,6 +66,7 @@ executables:
     - aeson
     - text
     - containers
+    - bson-mapping
 
 tests:
   music-fandom-map-test:

@@ -27,6 +27,9 @@ import Control.Lens
 import Database.MongoDB     (Action, Value, access, close, connect, select, 
                              delete, host, insertMany, master, (=:))
 
+-- bson-mapping
+import Data.Bson.Mapping (toBson)
+
 countries :: [String]
 -- countries = ["au.csv", "ad.html"]
 countries = ["us", "gb", "ad", "ar", "at", "au", "be", "bg", "bo", "br", "ca",
@@ -56,16 +59,7 @@ getForCountry c = do
 -- Insert the specified list of tracks into the database
 insertEntries :: [ArtistEntry] -> Action IO [Value]
 insertEntries artistEntries = insertMany "stats" bsonData
-    where bsonData = map (\a -> 
-            [
-                "artistName" =: artistName a, 
-                "streams" =: map (\(c,s) -> 
-                    [ 
-                        (pack c) =: s 
-                    ]
-                    ) (countryValues a)
-            ])
-            artistEntries
+    where bsonData = map toBson artistEntries
 
 clearStats :: Action IO ()
 clearStats = delete (select [] "stats")

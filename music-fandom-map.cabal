@@ -33,6 +33,8 @@ library
     , bytestring
     , text
     , vector
+    , bson
+    , bson-mapping
   exposed-modules:
       Lib
   default-language: Haskell2010
@@ -51,6 +53,7 @@ executable data-wrangler
     , mongoDB
     , vector
     , text
+    , bson-mapping
   default-language: Haskell2010
 
 executable server
