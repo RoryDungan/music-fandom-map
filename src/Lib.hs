@@ -18,7 +18,7 @@ import qualified Control.Exception as Exception
 import Data.Function
 import Data.List (sort, sortBy, groupBy, foldl', foldl1')
 
-import Data.Text (pack)
+import Data.Text (pack, unpack)
 
 import Data.Bson
 import Data.Bson.Mapping
@@ -84,7 +84,18 @@ instance Bson ArtistEntry where
                 (pack c) =: s 
             ) (countryValues a)
         ]
-    -- TODO: fromBson
+    fromBson document = do
+        name <- look "artistName" document >>= cast
+        let maybeStreams = look "streams" document 
+                >>= cast'List >>= mapStreams
+        case maybeStreams of 
+            Nothing -> fail "Could not read field"
+            Just streams -> return (Artist name streams)
+
+mapStreams :: [Field] -> Maybe [(CountryTitle, StreamsPct)]
+mapStreams = sequence . (map (\f -> 
+        cast' (value f) >>= (\s -> return (unpack (label f), s))
+    ))
 
 processData :: CountryTitle -> [Track] -> [CountryEntry]
 processData c xs =

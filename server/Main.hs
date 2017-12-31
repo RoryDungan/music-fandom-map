@@ -89,7 +89,7 @@ main = do
                         status status404
                         text "Could not find the specified artist ID"
                     else 
-                        case artistStatsFromBson (head resBson) of
+                        case fromBson (head resBson) :: Maybe ArtistEntry of
                             Just res -> json $ toJSON res
 
                             Nothing  -> do
@@ -112,9 +112,3 @@ allArtists pipe =
 artistStats :: Pipe -> ObjectId -> ActionM [Document]
 artistStats pipe oid = 
     runQuery pipe (select ["_id" =: oid] statsCollection)
-
-artistStatsFromBson :: Document -> Maybe ArtistEntry
-artistStatsFromBson document = do
-    name <- look "artistName" document >>= cast'
-    --streams <- look "streams" document >>= cast'
-    return (Artist name [])
