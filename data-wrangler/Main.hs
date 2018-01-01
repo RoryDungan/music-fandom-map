@@ -18,7 +18,7 @@ import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy.Char8 as CL
 
 -- wreq
-import Network.Wreq (Response, responseHeader, responseBody, get)
+import Network.Wreq (Response, responseHeader, responseBody, getWith, defaults, checkResponse)
 
 --lens
 import Control.Lens
@@ -44,6 +44,13 @@ filterCSVs :: [(t, Response body)] -> [(t, Response body)]
 filterCSVs responses = 
     filter (\(_,r) -> "text/csv" `C.isInfixOf` (contentTypeHeader r)) responses
         where contentTypeHeader r = r ^. responseHeader "Content-Type"
+
+-- HTTP GET that doesn't throw an exception on non-200 series response.
+get :: String -> IO (Response CL.ByteString)
+get url = 
+    getWith opts url
+    where 
+        opts = set checkResponse (Just $ \_ _ -> return ()) defaults
 
 -- Takes a country code and retuns a tuple with the same 
 -- country name and the result of the request.
