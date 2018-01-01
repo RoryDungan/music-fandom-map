@@ -90,8 +90,13 @@ main = do
                                 status status500
                                 text "Internal server error"
 
+        get "/" $ do
+            setHeader "Content-Type" "text/html"
+            file "frontend/dist/index.html"
 
-        middleware $ staticPolicy (noDots >-> addBase "frontend")
+        middleware 
+            $ staticPolicy 
+            $ noDots >-> addBase "frontend/dist"
 
     close pipe
 
