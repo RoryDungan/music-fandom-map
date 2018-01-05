@@ -6,6 +6,9 @@ module Main where
 
 import Lib
 
+-- base
+import GHC.Generics
+
 -- containers
 import qualified Data.Map as Map
 
@@ -16,6 +19,9 @@ import Network.HTTP.Types (status400, status404, status500)
 
 -- Aeson
 import Data.Aeson (toJSON)
+
+-- Cassava
+import Data.Csv
 
 -- BSON & bson-mapping
 import Data.Bson (ObjectId(), look, cast)
@@ -47,6 +53,14 @@ instance Bson ArtistInfo where
             "_id" =: oid,
             "artistName" =: name
         ]
+
+data ArtistStats = ArtistStats { countryCode :: String
+                               , streams :: Float
+                               } deriving (Show, Generic)
+
+instance FromNamedRecord ArtistStats
+instance ToNamedRecord ArtistStats
+instance DefaultOrdered ArtistStats
 
 main :: IO ()
 main = do 
@@ -83,7 +97,14 @@ main = do
                         text "Could not find the specified artist ID"
                     else 
                         case fromBson (head resBson) :: Maybe ArtistEntry of
-                            Just res -> json $ toJSON res
+                            Just res -> do
+                                let stats = fmap 
+                                        (\(c,s) -> ArtistStats c s) 
+                                        $ countryValues res
+                                    csv = encodeDefaultOrderedByName stats
+
+                                setHeader "Content-Type" "text/csv"
+                                raw csv
 
                             Nothing  -> do
                                 -- TODO: error logging
