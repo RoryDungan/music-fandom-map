@@ -8,7 +8,6 @@ import CountryCodes
 
 -- base
 import Data.Either
-import Control.Exception
 
 -- text
 import Data.Text (Text)
