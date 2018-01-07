@@ -10,22 +10,26 @@ import Data.Either
 -- vector
 import qualified Data.Vector as V
 
--- text
-import Data.Text (pack)
-
 -- bytestring
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy.Char8 as CL
 
 -- wreq
-import Network.Wreq (Response, responseHeader, responseBody, getWith, defaults, checkResponse)
+import Network.Wreq 
+    ( Response
+    , responseHeader
+    , responseBody
+    , getWith
+    , defaults
+    , checkResponse
+    )
 
 --lens
 import Control.Lens
 
 -- MongoDB
 import Database.MongoDB     (Action, Value, access, close, connect, select, 
-                             delete, host, insertMany, master, (=:))
+                             delete, host, insertMany, master)
 
 -- bson-mapping
 import Data.Bson.Mapping (toBson)

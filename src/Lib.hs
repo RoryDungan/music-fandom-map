@@ -37,9 +37,9 @@ import qualified Data.ByteString.Lazy as ByteString
 
 -- cassava
 import Data.Csv
-  ( FromNamedRecord(parseNamedRecord)
-  , (.:)
-  )
+    ( FromNamedRecord(parseNamedRecord)
+    , (.:)
+    )
 import qualified Data.Csv as Cassava
 
 -- vector
@@ -51,10 +51,11 @@ type StreamsPct = Float
 type TrackName = String
 type CountryTitle = String
 
-data Track = Track { trackName :: TrackName
-                   , trackArtistName :: ArtistName
-                   , trackStreams :: Streams
-                   } deriving (Show)
+data Track = Track 
+    { trackName :: TrackName
+    , trackArtistName :: ArtistName
+    , trackStreams :: Streams
+    } deriving (Show)
 
 instance FromNamedRecord Track where
     parseNamedRecord r =
@@ -63,10 +64,11 @@ instance FromNamedRecord Track where
             <*> r .: "Artist"
             <*> r .: "Streams"
 
-data CountryEntry = Country { countryTitle :: CountryTitle
-                            , countryArtistName :: ArtistName
-                            , streamsPct :: StreamsPct
-                            } deriving (Show)
+data CountryEntry = Country 
+    { countryTitle :: CountryTitle
+    , countryArtistName :: ArtistName
+    , streamsPct :: StreamsPct
+    } deriving (Show)
 
 instance Eq CountryEntry where
     (Country n1 a1 s1) == (Country n2 a2 s2) =
@@ -81,9 +83,10 @@ instance Ord CountryEntry where
             if aComp /= EQ then aComp else sComp
 
 
-data ArtistEntry = Artist { artistName :: ArtistName
-                          , countryValues :: [(CountryTitle, StreamsPct)]
-                          } deriving (Show, Eq)
+data ArtistEntry = Artist 
+    { artistName :: ArtistName
+    , countryValues :: [(CountryTitle, StreamsPct)]
+    } deriving (Show, Eq)
                           
 instance ToJSON ArtistEntry where
     toJSON (Artist name streams) = object 
