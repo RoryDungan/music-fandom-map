@@ -4,14 +4,21 @@ module Main where
 
 import Lib
 import DataProcessor
+import CountryCodes
 
 -- base
 import Data.Either
+import Control.Exception
+
+-- text
+import Data.Text (Text)
+import qualified Data.Text as T
 
 -- vector
 import qualified Data.Vector as V
 
 -- bytestring
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy.Char8 as CL
 
@@ -28,6 +35,12 @@ import Network.Wreq
 --lens
 import Control.Lens
 
+-- vector
+import Data.Vector (Vector)
+
+-- Cassava
+import Data.Csv (Header, decodeByName)
+
 -- MongoDB
 import Database.MongoDB     (Action, Value, access, close, connect, select, 
                              delete, host, insertMany, master)
@@ -35,7 +48,7 @@ import Database.MongoDB     (Action, Value, access, close, connect, select,
 -- bson-mapping
 import Data.Bson.Mapping (toBson)
 
-countries :: [String]
+countries :: [Text]
 -- countries = ["au.csv", "ad.html"]
 countries = ["us", "gb", "ad", "ar", "at", "au", "be", "bg", "bo", "br", "ca",
              "ch", "cl", "co", "cr", "cy", "cz", "de", "dk", "do", "ec", "ee",
@@ -59,11 +72,11 @@ get url =
 
 -- Takes a country code and retuns a tuple with the same 
 -- country name and the result of the request.
-getForCountry :: String -> IO (String, Response CL.ByteString)
+getForCountry :: Text -> IO (Text, Response CL.ByteString)
 getForCountry c = do 
     let baseUrl = "https://spotifycharts.com/regional/"
         suffix = "/daily/latest/download"
-        url = (baseUrl ++ c ++ suffix)
+        url = (baseUrl ++ (T.unpack c) ++ suffix)
 
     res <- get url
     return (c,res)
@@ -76,14 +89,26 @@ insertEntries artistEntries = insertMany "stats" bsonData
 clearStats :: Action IO ()
 clearStats = delete (select [] "stats")
 
+map2to3letterCountryCodes :: Monad m => Vector CountryInfo -> (Text, b) -> m (String, b)
+map2to3letterCountryCodes codes (c,r) = 
+    case alpha2ToAlpha3 c codes of
+        Just code -> return ((T.unpack code),r)
+        Nothing   -> fail ((T.unpack c) ++ " is not a valid ISO-3166-alpha-2 country code.")
+
 main :: IO ()
 main = do
+    -- Get country code info (we'll need this later)
+    countryCodesCSV <- BL.readFile "country-codes.csv"
+    let countryCodes = case decodeByName countryCodesCSV :: Either String (Header, Vector CountryInfo) of 
+            Left msg -> fail msg
+            Right csv -> snd csv
+
     -- Request the CSVs for all countries
     putStrLn "Requesting data for specified countries"
     reqs <- mapM getForCountry countries
     putStrLn "Finished downloading data"
 
-    let csvs = filterCSVs reqs
+    csvs <- mapM (map2to3letterCountryCodes countryCodes) (filterCSVs reqs)
 
     --liftEither :: (a, Either b c) -> Either b (a, c)
     let liftEither (c,e) = case e of 
@@ -95,6 +120,7 @@ main = do
 
     let artistEntries = artistSummaries $
             (fmap (\(c,v) -> ((processData c) . V.toList) v) trackEntries) >>= id
+    
 
     putStrLn "Adding data to database"
 

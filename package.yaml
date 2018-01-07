@@ -51,6 +51,7 @@ executables:
     - vector
     - text
     - bson-mapping
+    - cassava
   server:
     main:               Main.hs
     source-dirs:        server
