@@ -18,7 +18,7 @@ module Lib
     ) where
 
 -- text
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text)
 
 -- bson & bson-mapping
 import Data.Bson
@@ -36,10 +36,10 @@ import Data.Csv
     , (.:)
     )
 
-type ArtistName = String
+type ArtistName = Text
 type Streams = Int
 type StreamsPct = Float
-type TrackName = String
+type TrackName = Text
 type CountryTitle = Text
 
 data Track = Track 
