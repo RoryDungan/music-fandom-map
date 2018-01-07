@@ -89,10 +89,10 @@ insertEntries artistEntries = insertMany "stats" bsonData
 clearStats :: Action IO ()
 clearStats = delete (select [] "stats")
 
-map2to3letterCountryCodes :: Monad m => Vector CountryInfo -> (Text, b) -> m (String, b)
+map2to3letterCountryCodes :: Monad m => Vector CountryInfo -> (Text, b) -> m (Text, b)
 map2to3letterCountryCodes codes (c,r) = 
     case alpha2ToAlpha3 c codes of
-        Just code -> return ((T.unpack code),r)
+        Just code -> return (code, r)
         Nothing   -> fail ((T.unpack c) ++ " is not a valid ISO-3166-alpha-2 country code.")
 
 main :: IO ()

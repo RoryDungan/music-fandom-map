@@ -33,6 +33,7 @@ import Database.MongoDB (Document, Pipe, Query, master, connect, host,
 import Database.MongoDB.Query (Collection)
 
 -- text
+import Data.Text (Text)
 import qualified Data.Text as T
 
 -- DB collection with the data processed by the data wrangler in it.
@@ -54,7 +55,7 @@ instance Bson ArtistInfo where
             "artistName" =: name
         ]
 
-data ArtistStats = ArtistStats { countryCode :: String
+data ArtistStats = ArtistStats { countryCode :: Text
                                , streams :: Float
                                } deriving (Show, Generic)
 

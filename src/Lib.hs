@@ -18,7 +18,7 @@ module Lib
     ) where
 
 -- text
-import Data.Text (pack, unpack)
+import Data.Text (Text, pack, unpack)
 
 -- bson & bson-mapping
 import Data.Bson
@@ -40,7 +40,7 @@ type ArtistName = String
 type Streams = Int
 type StreamsPct = Float
 type TrackName = String
-type CountryTitle = String
+type CountryTitle = Text
 
 data Track = Track 
     { trackName :: TrackName
@@ -90,7 +90,7 @@ instance Bson ArtistEntry where
     toBson a = [
         "artistName" =: artistName a, 
         "streams" =: map (\(c,s) -> 
-                (pack c) =: s 
+                c =: s 
             ) (countryValues a)
         ]
 
@@ -105,5 +105,5 @@ instance Bson ArtistEntry where
 
 mapStreams :: [Field] -> Maybe [(CountryTitle, StreamsPct)]
 mapStreams = sequence . (map (\f -> 
-        cast' (value f) >>= (\s -> return (unpack (label f), s))
+        cast' (value f) >>= (\s -> return (label f, s))
     ))
