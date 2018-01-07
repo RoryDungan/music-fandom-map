@@ -5,7 +5,7 @@ module CountryCodes
     ) where
 
 import Data.Csv
-import Data.Text (Text)
+import Data.Text (Text, toUpper)
 import Data.Vector (Vector, find)
 
 data CountryInfo = CountryInfo
@@ -24,5 +24,6 @@ instance FromNamedRecord CountryInfo where
 -- and returns the 3 digit equivilant.
 alpha2ToAlpha3 :: Text -> Vector CountryInfo -> Maybe Text
 alpha2ToAlpha3 alpha2Value =
-    fmap alpha3 . find (\c -> alpha2 c == alpha2Value) 
+    fmap alpha3 . find (\c -> alpha2 c == alpha2Value')
+        where alpha2Value' = toUpper alpha2Value 
 
