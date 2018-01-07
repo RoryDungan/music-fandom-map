@@ -55,9 +55,10 @@ instance Bson ArtistInfo where
             "artistName" =: name
         ]
 
-data ArtistStats = ArtistStats { countryCode :: Text
-                               , streams :: Float
-                               } deriving (Show, Generic)
+data ArtistStats = ArtistStats 
+    { countryCode :: Text
+    , streams :: Float
+    } deriving (Show, Generic)
 
 instance FromNamedRecord ArtistStats
 instance ToNamedRecord ArtistStats
