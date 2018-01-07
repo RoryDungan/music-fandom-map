@@ -3,6 +3,7 @@
 module Main where
 
 import Lib
+import DataProcessor
 
 -- base
 import Data.Either
