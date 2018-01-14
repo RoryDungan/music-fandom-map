@@ -55,15 +55,6 @@ instance Bson ArtistInfo where
             "artistName" =: name
         ]
 
-data ArtistStats = ArtistStats
-    { countryCode :: Text
-    , streams :: Float
-    } deriving (Show, Generic)
-
-instance FromNamedRecord ArtistStats
-instance ToNamedRecord ArtistStats
-instance DefaultOrdered ArtistStats
-
 main :: IO ()
 main = do
     pipe <- connect (host "localhost")
@@ -100,9 +91,7 @@ main = do
                     else
                         case fromBson (head resBson) :: Maybe ArtistEntry of
                             Just res -> do
-                                let stats = fmap
-                                        (\(StreamsForCountry c s) -> ArtistStats c s)
-                                        $ countryValues res
+                                let stats = countryValues res
                                     csv = encodeDefaultOrderedByName stats
 
                                 setHeader "Content-Type" "text/csv"

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Lib
     ( ArtistEntry (Artist)
@@ -15,8 +16,11 @@ module Lib
     , countryTitle
     , countryArtistName
     , streamsPct
-    , StreamsForCountry(StreamsForCountry)
+    , ArtistStats(ArtistStats)
     ) where
+
+-- base
+import GHC.Generics
 
 -- text
 import Data.Text (Text)
@@ -34,6 +38,8 @@ import Data.Aeson (ToJSON, toJSON, object, (.=))
 -- cassava
 import Data.Csv
     ( FromNamedRecord(parseNamedRecord)
+    , ToNamedRecord
+    , DefaultOrdered
     , (.:)
     )
 
@@ -77,7 +83,7 @@ instance Ord CountryEntry where
 
 data ArtistEntry = Artist
     { artistName :: ArtistName
-    , countryValues :: [StreamsForCountry]
+    , countryValues :: [ArtistStats]
     } deriving (Show, Eq)
 
 instance ToJSON ArtistEntry where
@@ -90,7 +96,7 @@ instance ToJSON ArtistEntry where
 instance Bson ArtistEntry where
     toBson a = [
         "artistName" =: artistName a,
-        "streams" =: map (\(StreamsForCountry c s) ->
+        "streams" =: map (\(ArtistStats c s) ->
                 c =: s
             ) (countryValues a)
         ]
@@ -105,21 +111,26 @@ instance Bson ArtistEntry where
                 >>= cast'List >>= mapStreams
 
 
-data StreamsForCountry = StreamsForCountry
-    { countryCode :: Text
-    , streamsPctForCountry :: StreamsPct
-    } deriving (Show, Eq)
 
-instance ToJSON StreamsForCountry where
-    toJSON (StreamsForCountry c s) = object
+data ArtistStats = ArtistStats
+    { countryCode :: Text
+    , streams :: StreamsPct
+    } deriving (Show, Generic, Eq)
+
+instance FromNamedRecord ArtistStats
+instance ToNamedRecord ArtistStats
+instance DefaultOrdered ArtistStats
+
+instance ToJSON ArtistStats where
+    toJSON (ArtistStats c s) = object
         [
             "countryCode" .= c,
             "streams" .= s
         ]
 
 
-mapStreams :: [Field] -> Maybe [StreamsForCountry]
+mapStreams :: [Field] -> Maybe [ArtistStats]
 mapStreams = sequence
     . (map (\f ->
-        cast' (value f) >>= (\s -> return (StreamsForCountry (label f) s))
+        cast' (value f) >>= (\s -> return (ArtistStats (label f) s))
     ))

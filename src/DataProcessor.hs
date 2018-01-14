@@ -39,7 +39,7 @@ artistSummaries xs =
         let name =
                 countryArtistName (head xs')
             streamsPerCountry =
-                map (\(Country t _ s) -> StreamsForCountry t s) xs'
+                map (\(Country t _ s) -> ArtistStats t s) xs'
 
         in  Artist name streamsPerCountry
     )
