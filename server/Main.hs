@@ -92,10 +92,8 @@ main = do
                         case fromBson (head resBson) :: Maybe ArtistEntry of
                             Just res -> do
                                 let stats = countryValues res
-                                    csv = encodeDefaultOrderedByName stats
 
-                                setHeader "Content-Type" "text/csv"
-                                raw csv
+                                json $ toJSON stats
 
                             Nothing  -> do
                                 -- TODO: error logging
