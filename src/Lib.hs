@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Lib
     ( ArtistEntry (Artist)
@@ -19,9 +18,6 @@ module Lib
     , ArtistStats(ArtistStats)
     ) where
 
--- base
-import GHC.Generics
-
 -- text
 import Data.Text (Text)
 
@@ -29,17 +25,12 @@ import Data.Text (Text)
 import Data.Bson
 import Data.Bson.Mapping
 
--- containers
-import qualified Data.Map as Map
-
 -- aeson
 import Data.Aeson (ToJSON, toJSON, object, (.=))
 
 -- cassava
 import Data.Csv
     ( FromNamedRecord(parseNamedRecord)
-    , ToNamedRecord
-    , DefaultOrdered
     , (.:)
     )
 
@@ -112,14 +103,7 @@ instance Bson ArtistEntry where
 
 
 
-data ArtistStats = ArtistStats
-    { countryCode :: Text
-    , streams :: StreamsPct
-    } deriving (Show, Generic, Eq)
-
-instance FromNamedRecord ArtistStats
-instance ToNamedRecord ArtistStats
-instance DefaultOrdered ArtistStats
+data ArtistStats = ArtistStats CountryTitle StreamsPct deriving (Show, Eq)
 
 instance ToJSON ArtistStats where
     toJSON (ArtistStats c s) = object
