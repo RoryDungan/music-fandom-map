@@ -15,6 +15,7 @@ module Lib
     , countryTitle
     , countryArtistName
     , streamsPct
+    , StreamsForCountry(StreamsForCountry)
     ) where
 
 -- text
@@ -42,7 +43,7 @@ type StreamsPct = Float
 type TrackName = Text
 type CountryTitle = Text
 
-data Track = Track 
+data Track = Track
     { trackName :: TrackName
     , trackArtistName :: ArtistName
     , trackStreams :: Streams
@@ -55,7 +56,7 @@ instance FromNamedRecord Track where
             <*> r .: "Artist"
             <*> r .: "Streams"
 
-data CountryEntry = Country 
+data CountryEntry = Country
     { countryTitle :: CountryTitle
     , countryArtistName :: ArtistName
     , streamsPct :: StreamsPct
@@ -74,36 +75,51 @@ instance Ord CountryEntry where
             if aComp /= EQ then aComp else sComp
 
 
-data ArtistEntry = Artist 
+data ArtistEntry = Artist
     { artistName :: ArtistName
-    , countryValues :: [(CountryTitle, StreamsPct)]
+    , countryValues :: [StreamsForCountry]
     } deriving (Show, Eq)
-                          
+
 instance ToJSON ArtistEntry where
-    toJSON (Artist name streams) = object 
+    toJSON (Artist name streams) = object
         [
-            "name" .= name, 
-            "streams" .= Map.fromList streams
+            "name" .= name,
+            "streams" .= streams
         ]
 
 instance Bson ArtistEntry where
     toBson a = [
-        "artistName" =: artistName a, 
-        "streams" =: map (\(c,s) -> 
-                c =: s 
+        "artistName" =: artistName a,
+        "streams" =: map (\(StreamsForCountry c s) ->
+                c =: s
             ) (countryValues a)
         ]
 
     fromBson document = do
         name <- look "artistName" document >>= cast
-    
-        case maybeStreams of 
+
+        case maybeStreams of
             Nothing -> fail "Could not read field"
             Just streams -> return (Artist name streams)
-        where maybeStreams = look "streams" document 
+        where maybeStreams = look "streams" document
                 >>= cast'List >>= mapStreams
 
-mapStreams :: [Field] -> Maybe [(CountryTitle, StreamsPct)]
-mapStreams = sequence . (map (\f -> 
-        cast' (value f) >>= (\s -> return (label f, s))
+
+data StreamsForCountry = StreamsForCountry
+    { countryCode :: Text
+    , streamsPctForCountry :: StreamsPct
+    } deriving (Show, Eq)
+
+instance ToJSON StreamsForCountry where
+    toJSON (StreamsForCountry c s) = object
+        [
+            "countryCode" .= c,
+            "streams" .= s
+        ]
+
+
+mapStreams :: [Field] -> Maybe [StreamsForCountry]
+mapStreams = sequence
+    . (map (\f ->
+        cast' (value f) >>= (\s -> return (StreamsForCountry (label f) s))
     ))

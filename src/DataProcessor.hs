@@ -1,4 +1,4 @@
-module DataProcessor 
+module DataProcessor
     ( processData
     , artistSummaries
     , decodeItems
@@ -35,11 +35,11 @@ artistSummaries :: [CountryEntry] -> [ArtistEntry]
 artistSummaries xs =
     sortBy (\(Country _ a1 _) (Country _ a2 _) -> a1 `compare` a2) xs
     & groupBy (\(Country _ a1 _) (Country _ a2 _) -> a1 == a2)
-    & map (\xs' -> 
-        let name = 
+    & map (\xs' ->
+        let name =
                 countryArtistName (head xs')
-            streamsPerCountry = 
-                map (\(Country t _ s) -> (t,s)) xs'
+            streamsPerCountry =
+                map (\(Country t _ s) -> StreamsForCountry t s) xs'
 
         in  Artist name streamsPerCountry
     )
