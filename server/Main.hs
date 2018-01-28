@@ -7,7 +7,7 @@ module Main where
 import Lib
 
 -- base
-import GHC.Generics
+import Data.Function
 
 -- containers
 import qualified Data.Map as Map
@@ -20,11 +20,8 @@ import Network.HTTP.Types (status400, status404, status500)
 -- Aeson
 import Data.Aeson (toJSON)
 
--- Cassava
-import Data.Csv
-
 -- BSON & bson-mapping
-import Data.Bson (ObjectId(), look, cast)
+import Data.Bson (ObjectId(), look, cast, cast'List)
 import Data.Bson.Mapping
 
 -- MongoDB
@@ -33,7 +30,6 @@ import Database.MongoDB (Document, Pipe, Query, master, connect, host,
 import Database.MongoDB.Query (Collection)
 
 -- text
-import Data.Text (Text)
 import qualified Data.Text as T
 
 -- DB collection with the data processed by the data wrangler in it.
@@ -42,17 +38,32 @@ statsCollection = "stats"
 
 -- Information associating artist names and their Object IDs. Used when the
 -- /artsts route is requested.
-data ArtistInfo = ArtistInfo ObjectId String deriving (Show, Eq)
+data ArtistInfo = ArtistInfo 
+    { artist_id :: ObjectId
+    , artistName :: String
+    , artistStreams :: [ArtistStats]
+    } deriving (Show, Eq)
 
 instance Bson ArtistInfo where
     fromBson document = do
         oid <- look "_id" document >>= cast
         name <- look "artistName" document >>= cast
-        return (ArtistInfo oid name)
+        
+        let maybeStreams = look "streams" document
+                >>= cast'List >>= readArtistStatsFromField
+        
+        case maybeStreams of
+            Nothing -> 
+                fail "Could not read 'streams' field."
+            Just streams -> 
+                return (ArtistInfo oid name streams)
 
-    toBson (ArtistInfo oid name) = [
+    toBson (ArtistInfo oid name streams) = [
             "_id" =: oid,
-            "artistName" =: name
+            "artistName" =: name,
+            "streams" =: map (\(ArtistStats c s) ->
+                c =: s
+            ) streams
         ]
 
 main :: IO ()
@@ -64,12 +75,12 @@ main = do
         get "/api/v1/artists" $ do
             resBson <- allArtists pipe
             case sequence (map fromBson resBson) of
-                -- Convert our [ArtistInfo] to a `Map String String` for easy
-                -- JSON serialisation.
-                Just res -> json
-                    . toJSON
-                    . Map.fromList
-                    . map (\(ArtistInfo o n) -> (T.pack (show o), n)) $ res
+                Just res -> json $ res
+                    -- filter to artists that appear in 2 or more countries
+                    & filter (\a -> length (artistStreams a) > 2)
+                    & map (\(ArtistInfo o n _) -> (T.pack (show o), n))
+                    & Map.fromList
+                    & toJSON
 
                 Nothing  -> do
                     -- TODO: error logging
@@ -115,7 +126,7 @@ runQuery pipe query = access pipe master "music-map" (find query >>= rest)
 
 allArtists :: Pipe -> ActionM [Document]
 allArtists pipe =
-    runQuery pipe (select [] statsCollection) { project = ["artistName" =: 1] }
+    runQuery pipe (select [] statsCollection)
 
 artistStats :: Pipe -> ObjectId -> ActionM [Document]
 artistStats pipe oid =

@@ -16,6 +16,7 @@ module Lib
     , countryArtistName
     , streamsPct
     , ArtistStats(ArtistStats)
+    , readArtistStatsFromField
     ) where
 
 -- text
@@ -99,7 +100,7 @@ instance Bson ArtistEntry where
             Nothing -> fail "Could not read field"
             Just streams -> return (Artist name streams)
         where maybeStreams = look "streams" document
-                >>= cast'List >>= mapStreams
+                >>= cast'List >>= readArtistStatsFromField
 
 
 
@@ -113,8 +114,8 @@ instance ToJSON ArtistStats where
         ]
 
 
-mapStreams :: [Field] -> Maybe [ArtistStats]
-mapStreams = sequence
+readArtistStatsFromField :: [Field] -> Maybe [ArtistStats]
+readArtistStatsFromField = sequence
     . (map (\f ->
         cast' (value f) >>= (\s -> return (ArtistStats (label f) s))
     ))
