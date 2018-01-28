@@ -52,6 +52,10 @@ executables:
     - text
     - bson-mapping
     - cassava
+    - ConfigFile
+    - MissingH
+    - transformers
+    - mtl
   server:
     main:               Main.hs
     source-dirs:        server

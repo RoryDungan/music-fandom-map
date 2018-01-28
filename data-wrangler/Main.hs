@@ -8,6 +8,9 @@ import CountryCodes
 
 -- base
 import Data.Either
+import Control.Monad
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Except
 
 -- text
 import Data.Text (Text)
@@ -47,6 +50,10 @@ import Database.MongoDB     (Action, Value, access, close, connect, select,
 -- bson-mapping
 import Data.Bson.Mapping (toBson)
 
+-- ConfigFile
+import qualified Data.ConfigFile as Config
+import Data.Either.Utils
+
 countries :: [Text]
 -- countries = ["au.csv", "ad.html"]
 countries = ["us", "gb", "ad", "ar", "at", "au", "be", "bg", "bo", "br", "ca",
@@ -63,8 +70,8 @@ filterCSVs responses =
         where contentTypeHeader r = r ^. responseHeader "Content-Type"
 
 -- HTTP GET that doesn't throw an exception on non-200 series response.
-get :: String -> IO (Response CL.ByteString)
-get url = 
+getUrl :: String -> IO (Response CL.ByteString)
+getUrl url = 
     getWith opts url
     where 
         opts = set checkResponse (Just $ \_ _ -> return ()) defaults
@@ -77,7 +84,7 @@ getForCountry c = do
         suffix = "/daily/latest/download"
         url = (baseUrl ++ (T.unpack c) ++ suffix)
 
-    res <- get url
+    res <- getUrl url
     return (c,res)
 
 -- Insert the specified list of tracks into the database
@@ -96,6 +103,13 @@ map2to3letterCountryCodes codes (c,r) =
 
 main :: IO ()
 main = do
+    -- load config
+    conf <- Config.readfile Config.emptyCP "data-wrangler.conf"
+
+    dbHost <- case Config.get (forceEither conf) "DEFAULT" "dbhost" of 
+        Left _ -> fail "dbhost not specified in data-wrangler.conf"
+        Right c -> return c
+
     -- Get country code info (we'll need this later)
     countryCodesCSV <- BL.readFile "country-codes.csv"
     let countryCodes = case decodeByName countryCodesCSV :: Either String (Header, Vector CountryInfo) of 
@@ -123,7 +137,7 @@ main = do
 
     putStrLn "Adding data to database"
 
-    pipe <- connect (host "localhost") -- TODO: move this to config
+    pipe <- connect $ host dbHost
     access pipe master "music-map" $ do 
         clearStats
         insertEntries artistEntries
