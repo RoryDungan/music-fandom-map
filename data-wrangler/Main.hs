@@ -104,11 +104,15 @@ map2to3letterCountryCodes codes (c,r) =
 main :: IO ()
 main = do
     -- load config
-    conf <- Config.readfile Config.emptyCP "data-wrangler.conf"
-
-    dbHost <- case Config.get (forceEither conf) "DEFAULT" "dbhost" of 
-        Left _ -> fail "dbhost not specified in data-wrangler.conf"
+    configFile <- Config.readfile Config.emptyCP "data-wrangler.conf"
+    conf <- case configFile of 
+        Left err -> fail $ 
+            "Error loading config file data-wrangler.conf: " ++ (show err)
         Right c -> return c
+
+    dbHost <- case Config.get conf "DEFAULT" "dbhost" of 
+        Left _ -> fail "dbhost not specified in data-wrangler.conf"
+        Right h -> return h
 
     -- Get country code info (we'll need this later)
     countryCodesCSV <- BL.readFile "country-codes.csv"
