@@ -1,7 +1,7 @@
 name:                music-fandom-map
 version:             0.1.0.0
 github:              "RoryDungan/music-fandom-map"
-license:             BSD3
+license:             BSD2
 author:              "Rory Dungan"
 maintainer:          "contact@rorydungan.com"
 copyright:           "2017 Rory Dungan"
