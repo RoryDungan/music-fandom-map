@@ -78,10 +78,10 @@ getUrl url =
 
 -- Takes a country code and retuns a tuple with the same 
 -- country name and the result of the request.
-getForCountry :: Text -> IO (Text, Response CL.ByteString)
-getForCountry c = do 
     let baseUrl = "https://spotifycharts.com/regional/"
         suffix = "/daily/latest/download"
+getStatsForCountry :: Text -> IO (Text, Response CL.ByteString)
+getStatsForCountry c = do 
         url = (baseUrl ++ (T.unpack c) ++ suffix)
 
     res <- getUrl url
@@ -122,7 +122,7 @@ main = do
 
     -- Request the CSVs for all countries
     putStrLn "Requesting data for specified countries"
-    reqs <- mapM getForCountry countries
+    reqs <- mapM getStatsForCountry countries
     putStrLn "Finished downloading data"
 
     csvs <- mapM (map2to3letterCountryCodes countryCodes) (filterCSVs reqs)
