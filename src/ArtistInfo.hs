@@ -2,16 +2,29 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module ArtistInfo () where 
+module ArtistInfo 
+    ( ArtistSummary
+    , name 
+    , image 
+    , bio 
+    , ArtistImage
+    , url 
+    , size 
+    , ArtistBio
+    , summary 
+    , decodeArtistInfo
+    ) where 
 
 import GHC.Generics
 import Control.Applicative (optional)
+import Control.Monad
  
-import Data.Aeson (FromJSON, Value, parseJSON, withObject, (.:))
-import Data.Aeson.Types (Parser)
+import Data.Aeson (FromJSON, Value, eitherDecode, parseJSON, withObject, (.:))
+import Data.Aeson.Types (Parser, parseEither)
 
 import Data.Text (Text)
-import qualified Data.Text as T
+
+import Data.ByteString.Lazy (ByteString)
 
 import Data.Vector (Vector)
 
@@ -38,10 +51,16 @@ data ArtistBio = ArtistBio
     } deriving (Show, Generic)
 instance FromJSON ArtistBio where
 
+decodeArtistInfo :: ByteString -> Either String ArtistSummary
+decodeArtistInfo b = 
+    case eitherDecode b of 
+        Left e  -> Left e 
+        Right v -> join $ parseEither parseArtistInfo v
+
 parseArtistInfo :: Value -> Parser (Either String ArtistSummary)
 parseArtistInfo = withObject "tuple" $ \obj -> do 
     artist <- optional (obj .: "artist")
-    err    <- optional (obj .: "error")
+    err    <- optional (obj .: "message")
 
     return $ case artist of
         Just a  -> Right a
