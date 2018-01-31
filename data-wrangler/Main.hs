@@ -5,6 +5,7 @@ module Main where
 import Lib
 import DataProcessor
 import CountryCodes
+import ArtistInfo
 
 -- base
 import Data.Either
@@ -32,6 +33,7 @@ import Network.Wreq
     , getWith
     , defaults
     , checkResponse
+    , param
     )
 
 --lens
@@ -86,6 +88,20 @@ getStatsForCountry c = do
 
     res <- getUrl url
     return (c,res)
+
+-- Takes the name of an artist and a Last.fm API key, looks the artist up on 
+-- Last.fm and retrieves their description and the URL of an image of them
+getArtistSummary :: Text -> Text -> IO (Maybe ArtistSummary)
+getArtistSummary artist key = do 
+    let url = "http://ws.audioscrobbler.com/2.0/"
+        opts = defaults & param "method" .~ ["artist.getinfo"]
+                        & param "artist" .~ [artist]
+                        & param "api_key" .~ [key]
+                        & param "format" .~ ["json"]
+
+    res <- getWith opts url
+
+    fail "not implemented"
 
 -- Insert the specified list of tracks into the database
 insertEntries :: [ArtistEntry] -> Action IO [Value]
