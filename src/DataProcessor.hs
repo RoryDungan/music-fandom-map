@@ -42,7 +42,7 @@ processData c xs =
   so that we get an object with the artist name and a list of their streams
   for each country. 
 -}
-artistSummaries :: [CountryEntry] -> [ArtistEntry]
+artistSummaries :: [CountryEntry] -> [(ArtistName, [ArtistStats])]
 artistSummaries xs =
     sortBy (\(Country _ a1 _) (Country _ a2 _) -> a1 `compare` a2) xs
     & groupBy (\(Country _ a1 _) (Country _ a2 _) -> a1 == a2)
@@ -52,7 +52,7 @@ artistSummaries xs =
             streamsPerCountry =
                 map (\(Country t _ s) -> ArtistStats t s) xs'
 
-        in  Artist name streamsPerCountry
+        in  (name, streamsPerCountry)
     )
 
 -- |Read top 200 track charts from CSV data

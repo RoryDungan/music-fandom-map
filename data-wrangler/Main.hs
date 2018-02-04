@@ -143,7 +143,7 @@ main = do
 
     csvs <- mapM (map2to3letterCountryCodes countryCodes) (filterCSVs reqs)
 
-    --liftEither :: (a, Either b c) -> Either b (a, c)
+    -- Helper function that takes the either out of the second part of a tuple
     let liftEither (c,e) = case e of 
             Left msg  -> Left msg
             Right res -> Right (c,res)
@@ -151,16 +151,16 @@ main = do
     let trackEntries = rights $ map liftEither $ 
             map (\(c,r) -> (c, decodeItems (r ^. responseBody))) csvs
 
-    let artistEntries = artistSummaries $
+    -- Calculate plays per country for each artist
+    let statsByArtist = artistSummaries $ 
             (fmap (\(c,v) -> ((processData c) . V.toList) v) trackEntries) >>= id
-    
 
     putStrLn "Adding data to database"
 
     pipe <- connect $ host dbHost
     access pipe master "music-map" $ do 
         clearStats
-        insertEntries artistEntries
+        insertEntries $ fmap (\(a, c) -> Artist a c) statsByArtist
     close pipe
 
     putStrLn "Finished inserting data"
