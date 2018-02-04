@@ -8,7 +8,7 @@ module ArtistInfo
     , image 
     , bio 
     , ArtistImage
-    , url 
+    , imageUrl 
     , size 
     , ArtistBio
     , summary 
@@ -37,7 +37,7 @@ instance FromJSON ArtistSummary where
 
 
 data ArtistImage = ArtistImage
-    { url :: Text
+    { imageUrl :: Text
     , size :: Text 
     } deriving (Show)
 
