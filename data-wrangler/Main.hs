@@ -164,7 +164,7 @@ main = do
     pipe <- connect $ host dbHost
     access pipe master "music-map" $ do
         clearStats
-        insertEntries $ fmap (\(a, c) -> Artist a c) statsByArtist
+        insertEntries $ fmap (\(a, c) -> Artist a c Nothing Nothing) statsByArtist
     close pipe
 
     putStrLn "Finished inserting data"

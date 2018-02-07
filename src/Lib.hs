@@ -19,6 +19,9 @@ module Lib
     , readArtistStatsFromField
     ) where
 
+-- base
+import Data.Maybe
+
 -- text
 import Data.Text (Text)
 
@@ -76,32 +79,40 @@ instance Ord CountryEntry where
 data ArtistEntry = Artist
     { artistName :: ArtistName
     , countryValues :: [ArtistStats]
+    , artistDescription :: Maybe Text 
+    , imageUrl :: Maybe Text
     } deriving (Show, Eq)
 
 instance ToJSON ArtistEntry where
-    toJSON (Artist name streams) = object
+    toJSON (Artist name streams description image) = object $ catMaybes
         [
-            "name" .= name,
-            "streams" .= streams
+            ("name" .=) <$> Just name,
+            ("streams" .=) <$> Just streams,
+            ("description" .=) <$> description,
+            ("imageUrl" .=) <$> image
         ]
 
 instance Bson ArtistEntry where
-    toBson a = [
-        "artistName" =: artistName a,
-        "streams" =: map (\(ArtistStats c s) ->
-                c =: s
-            ) (countryValues a)
+    toBson a = catMaybes 
+        [
+            ("artistName" =:) <$> Just (artistName a),
+            ("streams" =:) <$> Just (map (\(ArtistStats c s) ->
+                    c =: s
+                ) (countryValues a)),
+            ("description" =:) <$> artistDescription a,
+            ("imageUrl" =:) <$> imageUrl a
         ]
 
     fromBson document = do
         name <- look "artistName" document >>= cast
+        let description = look "description" document >>= cast'
+        let image = look "imageUrl" document >>= cast'
 
         case maybeStreams of
             Nothing -> fail "Could not read field"
-            Just streams -> return (Artist name streams)
+            Just streams -> return $ Artist name streams description image
         where maybeStreams = look "streams" document
                 >>= cast'List >>= readArtistStatsFromField
-
 
 
 data ArtistStats = ArtistStats CountryTitle StreamsPct deriving (Show, Eq)
