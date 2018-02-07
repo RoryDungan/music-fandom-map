@@ -85,22 +85,20 @@ data ArtistEntry = Artist
 
 instance ToJSON ArtistEntry where
     toJSON (Artist name streams description image) = object $ catMaybes
-        [
-            ("name" .=) <$> Just name,
-            ("streams" .=) <$> Just streams,
-            ("description" .=) <$> description,
-            ("imageUrl" .=) <$> image
+        [ ("name" .=) <$> Just name
+        , ("streams" .=) <$> Just streams
+        , ("description" .=) <$> description
+        , ("imageUrl" .=) <$> image
         ]
 
 instance Bson ArtistEntry where
     toBson a = catMaybes 
-        [
-            ("artistName" =:) <$> Just (artistName a),
-            ("streams" =:) <$> Just (map (\(ArtistStats c s) ->
-                    c =: s
-                ) (countryValues a)),
-            ("description" =:) <$> artistDescription a,
-            ("imageUrl" =:) <$> imageUrl a
+        [ ("artistName" =:) <$> Just (artistName a)
+        , ("streams" =:) <$> Just (map (\(ArtistStats c s) ->
+                c =: s
+            ) (countryValues a))
+        , ("description" =:) <$> artistDescription a
+        , ("imageUrl" =:) <$> imageUrl a
         ]
 
     fromBson document = do
@@ -119,9 +117,8 @@ data ArtistStats = ArtistStats CountryTitle StreamsPct deriving (Show, Eq)
 
 instance ToJSON ArtistStats where
     toJSON (ArtistStats c s) = object
-        [
-            "countryCode" .= c,
-            "streams" .= s
+        [ "countryCode" .= c
+        , "streams" .= s
         ]
 
 
