@@ -107,6 +107,16 @@ getArtistSummary artist key = do
 
     return $ decodeArtistInfo (res ^. responseBody)
 
+genArtistInfo :: ArtistName -> [ArtistStats] -> Either String ArtistSummary -> ArtistEntry
+genArtistInfo name streams info = 
+    let maybeInfo = case info of 
+            Left _ -> Nothing
+            Right a -> Just a
+        description = extractBio <$> maybeInfo
+        imageUrl = join $ largeImageURL <$> maybeInfo
+        
+    in Artist name streams description imageUrl
+
 -- |Insert the specified list of tracks into the database
 insertEntries :: [ArtistEntry] -> Action IO [Value]
 insertEntries artistEntries = insertMany "stats" bsonData

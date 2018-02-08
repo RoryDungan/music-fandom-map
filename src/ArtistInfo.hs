@@ -4,14 +4,8 @@
 
 module ArtistInfo 
     ( ArtistSummary
-    , name 
-    , image 
-    , bio 
     , ArtistImage
-    , imageUrl 
-    , size 
     , ArtistBio
-    , summary 
     , decodeArtistInfo
     , largeImageURL
     , extractBio
