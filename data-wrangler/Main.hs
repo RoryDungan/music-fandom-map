@@ -107,8 +107,8 @@ getArtistSummary artist key = do
 
     return $ decodeArtistInfo (res ^. responseBody)
 
-genArtistInfo :: ArtistName -> [ArtistStats] -> Either String ArtistSummary -> ArtistEntry
-genArtistInfo name streams info = 
+genArtistEntry :: ArtistName -> [ArtistStats] -> Either String ArtistSummary -> ArtistEntry
+genArtistEntry name streams info = 
     let maybeInfo = case info of 
             Left _ -> Nothing
             Right a -> Just a
@@ -144,6 +144,10 @@ main = do
         Left _ -> fail "dbhost not specified in data-wrangler.conf"
         Right h -> return h
 
+    lastFmApiKey <- case Config.get conf "DEFAULT" "lastfm_api_key" of 
+        Left _ -> fail "lastfm_api_key not specified in data-wrangler.conf"
+        Right k -> return k
+
     -- Get country code info (we'll need this later)
     countryCodesCSV <- BL.readFile "country-codes.csv"
     let countryCodes = case decodeByName countryCodesCSV :: Either String (Header, Vector CountryInfo) of
@@ -169,12 +173,19 @@ main = do
     let statsByArtist = artistSummaries $
             (fmap (\(c,v) -> ((processData c) . V.toList) v) trackEntries) >>= id
 
+    -- Request descriptions and image URLs for artists from Last.fm
+    artistEntries <- mapM (\(name, stats) -> do
+            -- TODO: handle errors
+            artistInfo <- getArtistSummary name lastFmApiKey
+            return $ genArtistEntry name stats artistInfo
+        ) statsByArtist
+
     putStrLn "Adding data to database"
 
     pipe <- connect $ host dbHost
     access pipe master "music-map" $ do
         clearStats
-        insertEntries $ fmap (\(a, c) -> Artist a c Nothing Nothing) statsByArtist
+        insertEntries artistEntries
     close pipe
 
     putStrLn "Finished inserting data"
