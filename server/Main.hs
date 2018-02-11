@@ -8,6 +8,7 @@ import Lib
 
 -- base
 import Data.Function
+import Data.Maybe
 
 -- containers
 import qualified Data.Map as Map
@@ -21,7 +22,7 @@ import Network.HTTP.Types (status400, status404, status500)
 import Data.Aeson (toJSON)
 
 -- BSON & bson-mapping
-import Data.Bson (ObjectId(), look, cast, cast'List)
+import Data.Bson (ObjectId(), look, cast, cast', cast'List)
 import Data.Bson.Mapping
 
 -- MongoDB
@@ -30,6 +31,7 @@ import Database.MongoDB (Document, Pipe, Query, master, connect, host,
 import Database.MongoDB.Query (Collection)
 
 -- text
+import Data.Text (Text)
 import qualified Data.Text as T
 
 -- DB collection with the data processed by the data wrangler in it.
@@ -40,8 +42,10 @@ statsCollection = "stats"
 -- /artsts route is requested.
 data ArtistInfo = ArtistInfo 
     { artist_id :: ObjectId
-    , artistName :: String
+    , artistName :: Text
     , artistStreams :: [ArtistStats]
+    , artistDescription :: Maybe Text 
+    , imageUrl :: Maybe Text 
     } deriving (Show, Eq)
 
 instance Bson ArtistInfo where
@@ -51,19 +55,24 @@ instance Bson ArtistInfo where
         
         let maybeStreams = look "streams" document
                 >>= cast'List >>= readArtistStatsFromField
+
+        let description = look "description" document >>= cast' 
+            image = look "imageUrl" document >>= cast'
         
         case maybeStreams of
             Nothing -> 
                 fail "Could not read 'streams' field."
             Just streams -> 
-                return (ArtistInfo oid name streams)
+                return (ArtistInfo oid name streams description image)
 
-    toBson (ArtistInfo oid name streams) = [
-            "_id" =: oid,
-            "artistName" =: name,
-            "streams" =: map (\(ArtistStats c s) ->
+    toBson (ArtistInfo oid name streams description image) = catMaybes 
+        [ ("_id" =:) <$> Just oid
+        , ("artistName" =:) <$> Just name
+        , ("streams" =:) <$> Just (map (\(ArtistStats c s) ->
                 c =: s
-            ) streams
+            ) streams)
+        , ("description" =:) <$> description 
+        , ("imageUrl" =:) <$> image
         ]
 
 main :: IO ()
@@ -78,7 +87,7 @@ main = do
                 Just res -> json $ res
                     -- filter to artists that appear in 2 or more countries
                     & filter (\a -> length (artistStreams a) > 2)
-                    & map (\(ArtistInfo o n _) -> (T.pack (show o), n))
+                    & map (\(ArtistInfo o n _ _ _) -> (T.pack (show o), n))
                     & Map.fromList
                     & toJSON
 
@@ -102,9 +111,7 @@ main = do
                     else
                         case fromBson (head resBson) :: Maybe ArtistEntry of
                             Just res -> do
-                                let stats = countryValues res
-
-                                json $ toJSON stats
+                                json $ toJSON res
 
                             Nothing  -> do
                                 -- TODO: error logging
