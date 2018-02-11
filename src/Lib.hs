@@ -22,6 +22,9 @@ module Lib
 -- base
 import Data.Maybe
 
+-- containers
+import qualified Data.Map as Map
+
 -- text
 import Data.Text (Text)
 
@@ -86,10 +89,12 @@ data ArtistEntry = Artist
 instance ToJSON ArtistEntry where
     toJSON (Artist name streams description image) = object $ catMaybes
         [ ("name" .=) <$> Just name
-        , ("streams" .=) <$> Just streams
+        , ("streams" .=) <$> Just streamsMap
         , ("description" .=) <$> description
         , ("imageUrl" .=) <$> image
         ]
+        where streamsMap = 
+                Map.fromList . map (\(ArtistStats c s) -> (c, s)) $ streams 
 
 instance Bson ArtistEntry where
     toBson a = catMaybes 
