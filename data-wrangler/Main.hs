@@ -17,12 +17,16 @@ import Data.Text (Text)
 import qualified Data.Text as T
 
 -- vector
+import Data.Vector (Vector)
 import qualified Data.Vector as V
 
 -- bytestring
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Lazy.Char8 as CL
+
+--lens
+import Control.Lens
 
 -- wreq
 import Network.Wreq
@@ -34,12 +38,6 @@ import Network.Wreq
     , checkResponse
     , param
     )
-
---lens
-import Control.Lens
-
--- vector
-import Data.Vector (Vector)
 
 -- Cassava
 import Data.Csv (Header, decodeByName)

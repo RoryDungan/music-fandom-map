@@ -10,6 +10,10 @@ import Lib
 import Data.Function
 import Data.Maybe
 
+-- text
+import Data.Text (Text)
+import qualified Data.Text as T
+
 -- containers
 import qualified Data.Map as Map
 
@@ -27,12 +31,8 @@ import Data.Bson.Mapping
 
 -- MongoDB
 import Database.MongoDB (Document, Pipe, Query, master, connect, host,
-                         access, close, find, select, project, rest, (=:))
+                         access, close, find, select, rest, (=:))
 import Database.MongoDB.Query (Collection)
-
--- text
-import Data.Text (Text)
-import qualified Data.Text as T
 
 -- DB collection with the data processed by the data wrangler in it.
 statsCollection :: Collection
