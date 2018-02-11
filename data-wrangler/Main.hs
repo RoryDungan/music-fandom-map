@@ -10,8 +10,7 @@ import ArtistInfo
 -- base
 import Data.Either
 import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Except
+import System.IO (hPutStrLn, stderr)
 
 -- text
 import Data.Text (Text)
@@ -54,7 +53,6 @@ import Data.Bson.Mapping (toBson)
 
 -- ConfigFile
 import qualified Data.ConfigFile as Config
-import Data.Either.Utils
 
 countries :: [Text]
 -- countries = ["au.csv", "ad.html"]
@@ -103,9 +101,11 @@ getArtistSummary artist key = do
                         & param "api_key" .~ [T.pack key]
                         & param "format" .~ ["json"]
 
-    res <- getWith opts url
+    res <- catchShowIO $ getWith opts url
 
-    return $ decodeArtistInfo (res ^. responseBody)
+    return $ case res of 
+        Right r -> decodeArtistInfo (r ^. responseBody)
+        Left e  -> Left e
 
 genArtistEntry :: ArtistName -> [ArtistStats] -> Either String ArtistSummary -> ArtistEntry
 genArtistEntry name streams info = 
@@ -175,8 +175,15 @@ main = do
 
     -- Request descriptions and image URLs for artists from Last.fm
     artistEntries <- mapM (\(name, stats) -> do
-            -- TODO: handle errors
+            putStrLn $ "Getting Last.fm summary for " ++ (show name)
+
             artistInfo <- getArtistSummary name lastFmApiKey
+
+            -- Log error
+            case artistInfo of 
+                Left e -> hPutStrLn stderr e
+                Right _ -> return ()
+
             return $ genArtistEntry name stats artistInfo
         ) statsByArtist
 

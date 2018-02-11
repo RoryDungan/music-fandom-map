@@ -2,6 +2,7 @@ module DataProcessor
     ( processData
     , artistSummaries
     , decodeItems
+    , catchShowIO
     ) where
 
 import Lib
@@ -36,6 +37,7 @@ processData c xs =
     & sort
     & groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
     & map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
+
 
 {-|
   Takes a list of country entries and groups entries for the same artist together
