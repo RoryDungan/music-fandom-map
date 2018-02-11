@@ -95,12 +95,12 @@ getStatsForCountry c = do
   Takes the name of an artist and a Last.fm API key, looks the artist up on
   Last.fm and retrieves their description and the URL of an image of them
 -}
-getArtistSummary :: Text -> Text -> IO (Either String ArtistSummary)
+getArtistSummary :: Text -> String -> IO (Either String ArtistSummary)
 getArtistSummary artist key = do
     let url = "http://ws.audioscrobbler.com/2.0/"
         opts = defaults & param "method" .~ ["artist.getinfo"]
                         & param "artist" .~ [artist]
-                        & param "api_key" .~ [key]
+                        & param "api_key" .~ [T.pack key]
                         & param "format" .~ ["json"]
 
     res <- getWith opts url
