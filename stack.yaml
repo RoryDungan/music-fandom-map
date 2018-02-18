@@ -4,4 +4,4 @@ packages:
 - .
 extra-deps:
 - bson-mapping-0.1.5.1
-resolver: lts-10.2
+resolver: lts-10.5
