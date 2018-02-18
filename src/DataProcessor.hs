@@ -34,9 +34,9 @@ processData c xs =
             foldl' (\acc t -> acc + trackStreams t) 0 xs
 
     in  map (\(Track _ a s) -> Country c a ((fromIntegral s) / countryTotal)) xs
-    & sort
-    & groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
-    & map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
+      & sort
+      & groupBy (\(Country n1 a1 _) (Country n2 a2 _) -> n1 == n2 && a1 == a2)
+      & map (foldl1' (\(Country n a p1) (Country _ _ p2) -> Country n a (p1 + p2)))
 
 
 {-|
@@ -56,6 +56,8 @@ artistSummaries xs =
 
         in  (name, streamsPerCountry)
     )
+    -- filter to only artists that appear in at least 2 countries
+    & filter (\(_, stats) -> length stats > 2) 
 
 -- |Read top 200 track charts from CSV data
 decodeItems :: ByteString -> Either String (Vector Track)
