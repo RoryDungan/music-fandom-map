@@ -60,6 +60,7 @@ countries = ["us", "gb", "ad", "ar", "at", "au", "be", "bg", "bo", "br", "ca",
              "it", "jp", "lt", "lu", "lv", "mc", "mt", "mx", "my", "ni", "nl",
              "no", "nz", "pa", "pe", "ph", "pl", "pt", "py", "se", "sg", "sk",
              "sv", "th", "tr", "tw", "uy"]
+-- countries = ["au"]
 
 -- |Only keep responses that were actually CSVs
 filterCSVs :: [(t, Response body)] -> [(t, Response body)]
@@ -84,6 +85,8 @@ getStatsForCountry c = do
         suffix = "/daily/latest/download"
         url = (baseUrl ++ (T.unpack c) ++ suffix)
 
+    putStrLn ("Requesting " ++ url)
+
     res <- getUrl url
     return (c,res)
 
@@ -101,18 +104,18 @@ getArtistSummary artist key = do
 
     res <- catchShowIO $ getWith opts url
 
-    return $ case res of 
+    return $ case res of
         Right r -> decodeArtistInfo (r ^. responseBody)
         Left e  -> Left e
 
 genArtistEntry :: ArtistName -> [ArtistStats] -> Either String ArtistSummary -> ArtistEntry
-genArtistEntry name streams info = 
-    let maybeInfo = case info of 
+genArtistEntry name streams info =
+    let maybeInfo = case info of
             Left _ -> Nothing
             Right a -> Just a
         description = extractBio <$> maybeInfo
         imageUrl = join $ largeImageURL <$> maybeInfo
-        
+
     in Artist name streams description imageUrl
 
 -- |Insert the specified list of tracks into the database
@@ -142,7 +145,7 @@ main = do
         Left _ -> fail "dbhost not specified in data-wrangler.conf"
         Right h -> return h
 
-    lastFmApiKey <- case Config.get conf "DEFAULT" "lastfm_api_key" of 
+    lastFmApiKey <- case Config.get conf "DEFAULT" "lastfm_api_key" of
         Left _ -> fail "lastfm_api_key not specified in data-wrangler.conf"
         Right k -> return k
 
@@ -164,12 +167,14 @@ main = do
             Left msg  -> Left msg
             Right res -> Right (c,res)
 
-    let trackEntries = rights $ map liftEither $
+    let trackEntries = map liftEither $
             map (\(c,r) -> (c, decodeItems (r ^. responseBody))) csvs
+
+    mapM_ (\err -> putStrLn ("Error decoding CSV: " ++ err)) (lefts trackEntries)
 
     -- Calculate plays per country for each artist
     let statsByArtist = artistSummaries $
-            (fmap (\(c,v) -> ((processData c) . V.toList) v) trackEntries) >>= id
+            (fmap (\(c,v) -> ((processData c) . V.toList) v) (rights trackEntries)) >>= id
 
     -- Request descriptions and image URLs for artists from Last.fm
     artistEntries <- mapM (\(name, stats) -> do
@@ -178,7 +183,7 @@ main = do
             artistInfo <- getArtistSummary name lastFmApiKey
 
             -- Log error
-            case artistInfo of 
+            case artistInfo of
                 Left e -> hPutStrLn stderr e
                 Right _ -> return ()
 
