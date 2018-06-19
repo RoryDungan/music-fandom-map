@@ -3,6 +3,7 @@ module DataProcessor
     , artistSummaries
     , decodeItems
     , catchShowIO
+    , decodeItemsFromFile
     ) where
 
 import Lib
@@ -16,15 +17,16 @@ import Data.List (sort, sortBy, groupBy, foldl', foldl1')
 -- bytestring
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as ByteString
+import qualified Data.ByteString.Lazy.Char8 as Char8
 
 import qualified Data.Csv as Cassava
 
 -- vector
 import Data.Vector (Vector)
 
-{-| 
-  Takes a country code and, a list of track entires (track name, artist name, 
-  and number of streams), and returns a list of country entries (mapping of a 
+{-|
+  Takes a country code and, a list of track entires (track name, artist name,
+  and number of streams), and returns a list of country entries (mapping of a
   country code, artist name, and the percentage of streams in the top 200 songs
   for that country that the artist has).
 -}
@@ -42,7 +44,7 @@ processData c xs =
 {-|
   Takes a list of country entries and groups entries for the same artist together
   so that we get an object with the artist name and a list of their streams
-  for each country. 
+  for each country.
 -}
 artistSummaries :: [CountryEntry] -> [(ArtistName, [ArtistStats])]
 artistSummaries xs =
@@ -57,11 +59,16 @@ artistSummaries xs =
         in  (name, streamsPerCountry)
     )
     -- filter to only artists that appear in at least 2 countries
-    & filter (\(_, stats) -> length stats > 2) 
+    & filter (\(_, stats) -> length stats > 2)
 
 -- |Read top 200 track charts from CSV data
 decodeItems :: ByteString -> Either String (Vector Track)
-decodeItems = fmap snd . Cassava.decodeByName
+decodeItems = fmap snd . Cassava.decodeByName . dropFirstLine
+
+-- |Hack to drop the first line of the CSV, because Spotify uses it to show a
+-- |notice rather than for the actual headings.
+dropFirstLine :: ByteString -> ByteString
+dropFirstLine = Char8.drop 1 . Char8.dropWhile (/='\n')
 
 -- testing
 catchShowIO :: IO a -> IO (Either String a)
