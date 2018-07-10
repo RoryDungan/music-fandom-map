@@ -18,6 +18,8 @@ import Control.Monad
 import Data.Aeson (FromJSON, Value, eitherDecode, parseJSON, withObject, (.:))
 import Data.Aeson.Types (Parser, parseEither)
 
+import Text.Regex
+
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -56,6 +58,11 @@ decodeArtistInfo b =
         Left e  -> Left e 
         Right v -> join $ parseEither parseArtistInfo v
 
+removeLinks :: Text -> Text
+removeLinks inputStr = 
+    T.pack $ subRegex (mkRegex "<a href=\".+\">.+</a>") inputStr' ""
+        where inputStr' = T.unpack inputStr
+
 parseArtistInfo :: Value -> Parser (Either String ArtistSummary)
 parseArtistInfo = withObject "tuple" $ \obj -> do 
     artist <- optional (obj .: "artist")
@@ -75,4 +82,4 @@ largeImageURL (ArtistSummary _ images _) =
 
 -- |Extract just the biography section from the specified artist summary
 extractBio :: ArtistSummary -> Text 
-extractBio (ArtistSummary _ _ b) = summary b
+extractBio (ArtistSummary _ _ b) = removeLinks $ summary b
